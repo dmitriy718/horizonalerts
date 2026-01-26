@@ -1,0 +1,17 @@
+node_modules/
+.next/
+dist/
+coverage/
+.env
+.env.*
+*.log
+vpspass.txt
+.DS_Store
+*.swp
+*.swo
+*.tgz
+logs/
+tmp/
+.turbo/
+pnpm-lock.yaml
+yarn.lock
