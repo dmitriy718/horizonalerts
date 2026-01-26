@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: horizonalerts
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./services/api/db/migrations/001_init.sql:/db/001_init.sql:ro
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  api:
+    build:
+      context: .
+      dockerfile: services/api/Dockerfile
+      target: dev
+    environment:
+      PORT: 4000
+      HOST: 0.0.0.0
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/horizonalerts
+      REDIS_URL: redis://redis:6379
+      JWT_SIGNING_KEY: dev-secret-change
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+    volumes:
+      - ./services/api:/app
+      - /app/node_modules
+    ports:
+      - "4000:4000"
+    depends_on:
+      - postgres
+      - redis
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: dev
+    environment:
+      PUBLIC_API_BASE: http://api:4000
+      PUBLIC_SITE_URL: http://localhost:3000
+    volumes:
+      - ./apps/web:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

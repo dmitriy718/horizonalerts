@@ -1,0 +1,6 @@
+- name: Horizon Services VPS
+  hosts: vps
+  become: true
+  roles:
+    - docker
+    - nginx

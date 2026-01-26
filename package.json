@@ -1,0 +1,16 @@
+{
+  "name": "horizonalerts",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "npm@10.8.0",
+  "workspaces": [
+    "apps/*",
+    "services/*"
+  ],
+  "scripts": {
+    "dev:api": "npm --workspace services/api run dev",
+    "dev:web": "npm --workspace apps/web run dev",
+    "dev:signal": "npm --workspace services/signal-engine run dev",
+    "dev:mobile": "npm --workspace apps/mobile run start"
+  }
+}

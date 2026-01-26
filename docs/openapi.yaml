@@ -1,0 +1,62 @@
+openapi: 3.0.3
+info:
+  title: Horizon Services API
+  version: 0.1.0
+servers:
+  - url: https://api.horizonsvc.com
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+  /public-feed:
+    get:
+      summary: Delayed public feed
+      responses:
+        "200":
+          description: OK
+  /me/entitlement:
+    get:
+      summary: Get user entitlements
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+  /scanner/run:
+    post:
+      summary: Request a scan
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+  /help/ticket:
+    post:
+      summary: Create help ticket
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+  /portfolio/act:
+    post:
+      summary: Record a portfolio action
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: OK
+  /auth/callback/stripe:
+    post:
+      summary: Stripe webhook callback
+      responses:
+        "200":
+          description: OK
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
