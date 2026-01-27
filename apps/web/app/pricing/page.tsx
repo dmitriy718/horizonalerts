@@ -29,7 +29,7 @@ export default function PricingPage() {
             {[
               { q: "Can I cancel anytime?", a: "Yes. Manage your subscription directly from the Settings dashboard. No phone calls, no dark patterns." },
               { q: "Do you offer refunds?", a: "We offer a 7-day money-back guarantee for your first month. If it's not for you, just email us." },
-              { q: "Is the data real-time?", a: "Pro members get <50ms latency alerts. Free members see the Public Feed which is delayed by 15 minutes." },
+              { q: "Is the data real-time?", a: "Yes! Pro members get <50ms latency alerts. Free members see the Public Feed which is delayed by 15 minutes to meet compliance standards." },
             ].map((faq, i) => (
               <div key={i} className="glass-card rounded-xl p-6">
                 <h4 className="font-bold text-white text-lg mb-2">{faq.q}</h4>
