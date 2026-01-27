@@ -10,6 +10,9 @@ serviceAccount*.json
 horizontalv2.json
 postdoctorkey.json
 firebasestuff.txt
+horizonsvcfirebase.json
+horizontalv2.json
+firebasestuff.txt
 *.log
 vpspass.txt
 .DS_Store
@@ -21,3 +24,7 @@ tmp/
 .turbo/
 pnpm-lock.yaml
 yarn.lock
+firebasestuff.txt
+horizonsvcfirebase.json
+horizontalv2.json
+postdoctorkey.json
