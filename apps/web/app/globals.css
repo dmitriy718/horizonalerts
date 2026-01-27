@@ -2,70 +2,88 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --background-rgb: 2, 6, 23;
+  --foreground-rgb: 248, 250, 252;
+}
+
 body {
-  @apply bg-slate-950 text-slate-100 antialiased;
+  background-color: rgb(var(--background-rgb));
+  color: rgb(var(--foreground-rgb));
+  @apply antialiased selection:bg-cyan-500/30 selection:text-cyan-200;
 }
 
+/* Dynamic Background Grid */
 .bg-grid {
-  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.2) 1px, transparent 0);
-  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
 }
 
-.accent-gradient {
-  background: linear-gradient(120deg, rgba(99, 102, 241, 0.25), rgba(14, 165, 233, 0.25), rgba(16, 185, 129, 0.2));
+.bg-grid-small {
+  background-image: 
+    linear-gradient(to right, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
-.ticker {
-  white-space: nowrap;
+/* Glassmorphism Cards */
+.glass-card {
+  @apply bg-slate-950/40 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/20;
+}
+
+.glass-panel {
+  @apply bg-slate-900/60 backdrop-blur-md border border-white/5;
+}
+
+/* Typography Gradients */
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400;
+}
+
+.text-gradient-primary {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600;
+}
+
+/* Interactive Elements */
+.btn-primary {
+  @apply relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 px-8 py-3 font-semibold text-white transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(79,70,229,0.3)] active:scale-95;
+}
+
+.btn-secondary {
+  @apply rounded-xl border border-white/10 bg-white/5 px-8 py-3 font-semibold text-slate-300 transition-all hover:bg-white/10 hover:text-white active:scale-95;
+}
+
+/* Ticker Animation */
+.ticker-wrap {
+  width: 100%;
   overflow: hidden;
   mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
 }
 
-.ticker-track {
-  display: inline-flex;
-  gap: 24px;
-  animation: ticker 30s linear infinite;
+.ticker {
+  display: flex;
+  width: max-content;
+  animation: scroll 40s linear infinite;
 }
 
-@keyframes ticker {
-  0% {
-    transform: translateX(0%);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
+.ticker:hover {
+  animation-play-state: paused;
 }
 
-.pulse-ring {
-  position: relative;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
 }
-
-.pulse-ring::after {
-  content: "";
-  position: absolute;
-  inset: -6px;
-  border-radius: 9999px;
-  border: 1px solid rgba(99, 102, 241, 0.4);
-  box-shadow: 0 0 24px rgba(99, 102, 241, 0.4);
-  animation: pulse 3s ease-in-out infinite;
+::-webkit-scrollbar-track {
+  background: #0f172a;
 }
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 0.4;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 4px;
 }
-
-.glass {
-  @apply bg-slate-900/70 backdrop-blur-md border border-slate-800 shadow-lg shadow-slate-950/40;
-}
-
-.glow {
-  box-shadow: 0 0 40px rgba(99, 102, 241, 0.35);
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
