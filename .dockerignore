@@ -1,0 +1,11 @@
+.git
+node_modules
+.next
+dist
+.env
+.env.*
+vpspass.txt
+npm-debug.log
+*.log
+horizonsvcfirebase.json
+horizontalv2.json
