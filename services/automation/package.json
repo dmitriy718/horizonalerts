@@ -9,5 +9,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "dotenv": "^16.6.1",
+    "openai": "^6.16.0"
+  }
 }

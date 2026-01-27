@@ -1,17 +1,18 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { BillingButtons } from "../ui/BillingButtons";
+import { useSearchParams, useRouter } from "next/navigation";
 
 const tiers = [
   {
     name: "Plain",
+    id: "free",
     price: "$0",
     description: "5 alerts per day, no customization, email verification required.",
     features: ["Delayed public feed", "Basic dashboard", "Email support"]
   },
   {
     name: "Pro",
+    id: "pro",
     price: "$49/mo",
     description: "Unlimited alerts, full customization, playbook modes.",
     features: [
@@ -25,6 +26,7 @@ const tiers = [
 
 export function PricingClient() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const status = searchParams.get("status");
 
   return (
@@ -59,13 +61,16 @@ export function PricingClient() {
               ))}
             </ul>
             <div className="mt-6">
-              {tier.name === "Pro" ? (
-                <BillingButtons mode="checkout" />
-              ) : (
-                <button className="w-full rounded-md border border-slate-700 px-4 py-2 text-sm text-slate-200">
-                  Start {tier.name}
-                </button>
-              )}
+              <button 
+                onClick={() => router.push(`/onboarding?plan=${tier.id}`)}
+                className={`w-full rounded-xl px-4 py-3 text-sm font-bold transition-all ${
+                  tier.name === "Pro" 
+                    ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 hover:scale-[1.02]"
+                    : "border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10"
+                }`}
+              >
+                Start {tier.name}
+              </button>
             </div>
           </div>
         ))}

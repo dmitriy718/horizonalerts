@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import { OnboardingWizard } from "../components/OnboardingWizard";
 
 export default function OnboardingPage() {
@@ -7,7 +8,9 @@ export default function OnboardingPage() {
       <div className="mx-auto max-w-6xl px-6 text-center">
         <h1 className="mb-4 text-4xl font-bold text-white">Setup Your Profile</h1>
         <p className="mb-12 text-slate-400">Help us tailor the algorithm to your risk profile.</p>
-        <OnboardingWizard />
+        <Suspense fallback={<div className="h-96 w-full animate-pulse rounded-3xl bg-white/5" />}>
+          <OnboardingWizard />
+        </Suspense>
       </div>
     </div>
   );
