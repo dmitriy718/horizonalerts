@@ -3,14 +3,23 @@ import path from "path";
 import matter from "gray-matter";
 
 function getContentDirectory() {
+  console.log("DEBUG: process.cwd() =", process.cwd());
+  
   // Production Docker path (mounted volume)
   const prodPath = path.join(process.cwd(), "content/academy");
+  console.log("DEBUG: checking prodPath =", prodPath);
+  
   if (fs.existsSync(prodPath)) {
+    console.log("DEBUG: prodPath exists. Files:", fs.readdirSync(prodPath));
     return prodPath;
+  } else {
+    console.log("DEBUG: prodPath does NOT exist.");
   }
   
   // Local development path (relative to apps/web)
-  return path.join(process.cwd(), "../../content/academy");
+  const localPath = path.join(process.cwd(), "../../content/academy");
+  console.log("DEBUG: checking localPath =", localPath);
+  return localPath;
 }
 
 const contentDirectory = getContentDirectory();
