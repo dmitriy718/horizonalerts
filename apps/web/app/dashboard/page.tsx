@@ -1,9 +1,36 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell, Search, Filter, TrendingUp, Zap } from "lucide-react";
+import { useAuth } from "../context/auth-context";
+import { getApiBaseUrl } from "../lib/api";
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("feed");
+  const [signals, setSignals] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchSignals = async () => {
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch(`${getApiBaseUrl()}/scanner`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const json = await res.json();
+          setSignals(json.data || []);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    fetchSignals();
+    const interval = setInterval(fetchSignals, 5000); // 5s poll for real-time feel
+    return () => clearInterval(interval);
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-slate-950 pt-24 pb-20">
@@ -20,7 +47,7 @@ export default function DashboardPage() {
               <Search size={16} /> Scan
             </button>
             <button className="flex items-center gap-2 rounded-xl bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all">
-              <Zap size={16} /> Alerts (2)
+              <Zap size={16} /> Alerts ({signals.length})
             </button>
           </div>
         </div>
@@ -52,29 +79,32 @@ export default function DashboardPage() {
               </button>
             </div>
 
-            {/* Mock Signals */}
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="glass-card rounded-2xl p-6 border-l-4 border-l-cyan-500 hover:bg-slate-900/80 transition-all cursor-pointer group">
+            {signals.length === 0 && (
+              <div className="text-center py-10 text-slate-500">Waiting for signals...</div>
+            )}
+
+            {signals.map((signal) => (
+              <div key={signal.id} className="glass-card rounded-2xl p-6 border-l-4 border-l-cyan-500 hover:bg-slate-900/80 transition-all cursor-pointer group">
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xl font-bold text-white">NVDA</span>
-                      <span className="rounded bg-cyan-500/20 px-2 py-0.5 text-xs font-bold text-cyan-400">CALL</span>
-                      <span className="text-xs text-slate-500">15m ago</span>
+                      <span className="text-xl font-bold text-white">{signal.symbol}</span>
+                      <span className="rounded bg-cyan-500/20 px-2 py-0.5 text-xs font-bold text-cyan-400">{signal.pattern}</span>
+                      <span className="text-xs text-slate-500">{new Date(signal.bar_time).toLocaleTimeString()}</span>
                     </div>
                     <div className="mt-2 text-sm text-slate-300">
-                      Institutional Vice detected. Heavy absorption at 875.50 level.
+                      {JSON.stringify(signal.features)}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-lg font-mono font-bold text-emerald-400">875.50</div>
+                    <div className="text-lg font-mono font-bold text-emerald-400">{Number(signal.entry).toFixed(2)}</div>
                     <div className="text-xs text-slate-500">Entry Zone</div>
                   </div>
                 </div>
                 <div className="mt-4 flex gap-4 border-t border-white/5 pt-4 text-xs font-mono text-slate-400 group-hover:text-slate-300">
-                  <span>TP1: 885.00</span>
-                  <span>TP2: 900.00</span>
-                  <span className="text-red-400/80">SL: 868.00</span>
+                  <span>TP1: {Number(signal.tp1).toFixed(2)}</span>
+                  <span>TP2: {Number(signal.tp2).toFixed(2)}</span>
+                  <span className="text-red-400/80">SL: {Number(signal.sl).toFixed(2)}</span>
                 </div>
               </div>
             ))}

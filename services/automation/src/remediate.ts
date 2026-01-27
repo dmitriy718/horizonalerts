@@ -125,14 +125,37 @@ async function main() {
     const imageFilename2 = `${slug}-chart.png`;
 
     // 1. Generate Content
-    const content = await generateLessonContent(topic);
+    let content = "";
+    let attempts = 0;
+    while (content.split(" ").length < 1000 && attempts < 3) {
+      console.log(`📝 Writing Lesson: ${topic.title} [${topic.level}] (Attempt ${attempts + 1})...`);
+      content = await generateLessonContent(topic);
+      attempts++;
+    }
+
+    if (content.split(" ").length < 1000) {
+      console.error(`⚠️ Failed to generate thick content for ${topic.title} after 3 attempts.`);
+    }
     
-    // 2. Generate Images (Throttle: 10s delay to be safe)
-    await new Promise(r => setTimeout(r, 5000));
-    const img1 = await generateImage(`Abstract concept visualization of ${topic.title}, 3d render, glowing network`, imageFilename1);
+    // 2. Generate Images (Skip if exists to save time/cost, or force if needed)
+    // Checking if image exists in target dir
+    const img1Path = path.join(ASSET_DIR, imageFilename1);
+    const img2Path = path.join(ASSET_DIR, imageFilename2);
     
-    await new Promise(r => setTimeout(r, 5000));
-    const img2 = await generateImage(`Technical trading chart pattern showing ${topic.title}, candlestick data, clean UI`, imageFilename2);
+    let img1 = `/academy-assets/${imageFilename1}`;
+    let img2 = `/academy-assets/${imageFilename2}`;
+
+    if (!fs.existsSync(img1Path)) {
+      await new Promise(r => setTimeout(r, 3000));
+      const url1 = await generateImage(`Abstract concept visualization of ${topic.title}, 3d render, glowing network`, imageFilename1);
+      if (url1) img1 = url1;
+    }
+
+    if (!fs.existsSync(img2Path)) {
+      await new Promise(r => setTimeout(r, 3000));
+      const url2 = await generateImage(`Technical trading chart pattern showing ${topic.title}, candlestick data, clean UI`, imageFilename2);
+      if (url2) img2 = url2;
+    }
 
     // 3. Assemble Markdown
     const fileContent = `---

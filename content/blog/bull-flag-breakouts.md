@@ -9,8 +9,8 @@ image: "/academy-assets/bull-flag-breakouts-concept.png"
 
 *An excerpt from our Academy Module.*
 
-## Executive Summary: The "Why" and "What"
+## Executive Summary: The "Why" and "What" of Bull Flag Breakouts
 
-**Bull flag breakouts** are one of the most powerful and visually compelling patterns in trading used by both retail and institutional traders to identify continuation opportunities in a trending market. This pattern emerges when the market experiences a strong upward movement (the flagpole), followed by a brief consolidation period (the flag), and culminates with a breakout that continues the prior uptrend. Understanding and accurately trading bull fl...
+A **Bull Flag Breakout** is a powerful chart pattern that signals the continuation of an uptrend after a brief consolidation. This pattern resembles a flag at the top of a pole, where the "pole" is formed by a sharp rally and the "flag" by a period of consolidation moving slightly downward or sideways. This setup is favored among traders because it straightforwardly suggests a continuation of bullish momentum and is relatively ea...
 
 **[Read the full 15-minute lesson in the Academy](/academy/bull-flag-breakouts-lesson)**

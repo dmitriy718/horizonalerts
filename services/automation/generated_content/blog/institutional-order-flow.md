@@ -11,6 +11,6 @@ image: "/academy-assets/institutional-order-flow-concept.png"
 
 ## Executive Summary: The "Why" and "What"
 
-Institutional order flow is the backbone of trading strategies used by major financial players like banks, hedge funds, and proprietary trading firms. Understanding this can provide deep insights into market mechanics and drive more nuanced trading decisions. This order flow isn't about following trends set by individual, retail traders; it's about comprehending the sheer volume and strategic movements of the market's whales. Essentially, if you want t...
+**Institutional order flow** refers to the buying and selling activity carried out by large market players such as banks, hedge funds, and other financial institutions. These entities move substantial amounts of money, and their transactions can significantly influence asset prices and market dynamics. Understanding institutional order flow is critical for advanced traders because it offers insights into where the market might head, based on the action...
 
 **[Read the full 15-minute lesson in the Academy](/academy/institutional-order-flow-lesson)**

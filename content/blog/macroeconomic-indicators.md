@@ -11,8 +11,6 @@ image: "/academy-assets/macroeconomic-indicators-concept.png"
 
 ## Executive Summary: The "Why" and "What"
 
-***Macroeconomic indicators*** are pivotal tools for institutional traders in analyzing the economic environment and forecasting market directions. They show how various sectors of the economy are performing and provide insight into future central bank policies — crucial for strategic trading decisions. Given the depth of data these indicators provide, they allow traders to anticipate market volatility, inflation trends, and economic cycles.
-
-Understan...
+**Macroeconomic indicators** are crucial data points that paint the broad scope of an economy’s health and trajectory. They are not just news but are underlying currents that shape market expectations and reactions for all participants, from individual retail investors to large institutional bodies. Understanding and interpreting these indicators accurately can provide a significant edge in trading decisions and strategy formulation. This lesson will d...
 
 **[Read the full 15-minute lesson in the Academy](/academy/macroeconomic-indicators-lesson)**

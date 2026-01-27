@@ -9,12 +9,8 @@ image: "/academy-assets/short-squeeze-mechanics-concept.png"
 
 *An excerpt from our Academy Module.*
 
-## Executive Summary
+## Executive Summary: The "Why" and "What"
 
-### The "Why" and "What" of a Short Squeeze
-
-A **short squeeze** occurs when a stock or other asset jumps sharply higher, forcing traders who had bet that its price would fall to buy it back at higher prices to prevent even greater losses. Their scramble to cover these short positions quickly drives the price up even further, potentially leading to dramatic price increases.
-
-Understanding short squeezes is crucial for traders, particularly at the institutional level, as it ...
+**Short squeezes** represent one of the most explosive phenomena in stock markets, commanding attention due to their dramatic impact on stock prices and their ability to inflict colossal losses or spectacular gains. A short squeeze occurs when a stock with a high degree of short interest (i.e., a large number of shares sold short but not yet covered or closed out) rapidly increases in value. This increase forces short sellers to buy back their position...
 
 **[Read the full 15-minute lesson in the Academy](/academy/short-squeeze-mechanics-lesson)**

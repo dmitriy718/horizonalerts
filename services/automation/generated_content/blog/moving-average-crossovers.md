@@ -9,8 +9,10 @@ image: "/academy-assets/moving-average-crossovers-concept.png"
 
 *An excerpt from our Academy Module.*
 
-## Executive Summary: The "Why" and "What"
+## Executive Summary: The "Why" and "What" of Moving Average Crossovers
 
-Moving Average Crossovers are a staple in the trading world, utilized by both beginner and experienced traders to identify trends and potential entry and exit points. The appeal lies in the simplicity and effectiveness of moving averages to smooth price data and thereby filter out the noise, making trends clearer. In its essence, a moving average crossover strategy involves two moving averages of different lengths: a "fast" and a "slow" moving average....
+Moving Average Crossovers are a fundamental concept in technical trading used to identify potential changes in market trends. This method involves using two (or more) moving averages - typically a shorter period and a longer period moving average - and observes the points at which these averages cross one another. 
+
+**Why this is important**: Moving average crossovers help traders detect early signals of shifting market mom...
 
 **[Read the full 15-minute lesson in the Academy](/academy/moving-average-crossovers-lesson)**

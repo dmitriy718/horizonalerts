@@ -32,9 +32,9 @@ export default function AcademyPage() {
                     🎓
                   </div>
                   <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide border ${
-                    lesson.difficulty === 'Expert' ? 'border-red-500/30 bg-red-500/10 text-red-400' :
-                    lesson.difficulty === 'Advanced' ? 'border-orange-500/30 bg-orange-500/10 text-orange-400' :
-                    'border-blue-500/30 bg-blue-500/10 text-blue-400'
+                    lesson.difficulty === 'Expert' || lesson.difficulty === 'Advanced' ? 'border-purple-500/30 bg-purple-500/10 text-purple-400' :
+                    lesson.difficulty === 'Intermediate' ? 'border-cyan-500/30 bg-cyan-500/10 text-cyan-400' :
+                    'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
                   }`}>
                     {lesson.difficulty}
                   </span>

@@ -9,10 +9,10 @@ image: "/academy-assets/introduction-to-volume-concept.png"
 
 *An excerpt from our Academy Module.*
 
-## Executive Summary: The "Why" and "What"
+## Executive Summary: The "Why" and "What" of Trading Volume
 
-**Volume** in trading refers to the amount of a particular asset (like a stock or commodity) that is traded within a given time frame. It is a crucial indicator because it reflects the activity level of an asset in the market, providing traders with insights beyond just price movements.
+Trading volume, simply put, represents the total number of shares or contracts traded for a particular security or market during a specified period. It is a powerful indicator used by traders to measure the strength or weakness of a price trend. The essence of understanding volume lies in recognizing the impact it has on price movements and market psychology.
 
-For beginner traders, understanding volume is akin to understanding the heartbeat of the market. Volume acts as a thermometer for market sentiment and can often preced...
+**Why is volume important?** Volume acts as a fuel that drives the market e...
 
 **[Read the full 15-minute lesson in the Academy](/academy/introduction-to-volume-lesson)**
