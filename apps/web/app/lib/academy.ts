@@ -2,7 +2,18 @@ import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
 
-const contentDirectory = path.join(process.cwd(), "../../content/academy");
+function getContentDirectory() {
+  // Production Docker path (mounted volume)
+  const prodPath = path.join(process.cwd(), "content/academy");
+  if (fs.existsSync(prodPath)) {
+    return prodPath;
+  }
+  
+  // Local development path (relative to apps/web)
+  return path.join(process.cwd(), "../../content/academy");
+}
+
+const contentDirectory = getContentDirectory();
 
 export interface Lesson {
   slug: string;

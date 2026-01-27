@@ -56,7 +56,7 @@ export function Navbar() {
     { name: "Academy", href: "/academy" },
     { name: "Blog", href: "/blog" },
     { name: "About", href: "/about" },
-    { name: "Contact", href: "/contact" },
+    { name: "Support", href: "/support" },
   ];
 
   return (
