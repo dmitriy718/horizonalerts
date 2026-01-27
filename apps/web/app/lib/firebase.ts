@@ -11,16 +11,13 @@ const config = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
 };
 
+export const app = !getApps().length ? initializeApp(config) : getApps()[0];
+
 export function getFirebaseApp() {
   if (!config.apiKey || !config.projectId) {
     return null;
   }
-
-  if (!getApps().length) {
-    return initializeApp(config);
-  }
-
-  return getApps()[0];
+  return app;
 }
 
 export function getFirebaseAuth() {

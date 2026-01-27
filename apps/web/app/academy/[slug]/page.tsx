@@ -34,7 +34,7 @@ export default async function LessonPage({ params }: { params: Promise<{ slug: s
               <span className="text-slate-500 text-sm">⏱ {lesson.duration}</span>
             </div>
             <h1 className="text-3xl md:text-5xl font-bold text-white leading-tight">
-              {lesson.title.replace("Lesson: ", "")}
+              {lesson.title ? lesson.title.replace("Lesson: ", "") : "Untitled Lesson"}
             </h1>
           </header>
 
