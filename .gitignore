@@ -4,6 +4,12 @@ dist/
 coverage/
 .env
 .env.*
+*firebase*.json
+serviceAccount*.json
+*service-account*.json
+horizontalv2.json
+postdoctorkey.json
+firebasestuff.txt
 *.log
 vpspass.txt
 .DS_Store
