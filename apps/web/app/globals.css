@@ -3,9 +3,69 @@
 @tailwind utilities;
 
 body {
-  @apply bg-slate-950 text-slate-100;
+  @apply bg-slate-950 text-slate-100 antialiased;
+}
+
+.bg-grid {
+  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.2) 1px, transparent 0);
+  background-size: 32px 32px;
+}
+
+.accent-gradient {
+  background: linear-gradient(120deg, rgba(99, 102, 241, 0.25), rgba(14, 165, 233, 0.25), rgba(16, 185, 129, 0.2));
+}
+
+.ticker {
+  white-space: nowrap;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.ticker-track {
+  display: inline-flex;
+  gap: 24px;
+  animation: ticker 30s linear infinite;
+}
+
+@keyframes ticker {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.pulse-ring {
+  position: relative;
+}
+
+.pulse-ring::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 24px rgba(99, 102, 241, 0.4);
+  animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
 }
 
 .glass {
-  @apply bg-slate-900/70 backdrop-blur-md border border-slate-800;
+  @apply bg-slate-900/70 backdrop-blur-md border border-slate-800 shadow-lg shadow-slate-950/40;
+}
+
+.glow {
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.35);
 }
