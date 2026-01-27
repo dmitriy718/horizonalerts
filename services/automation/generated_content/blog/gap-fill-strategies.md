@@ -9,10 +9,8 @@ image: "/academy-assets/gap-fill-strategies-concept.png"
 
 *An excerpt from our Academy Module.*
 
-## Executive Summary: The "Why" and "What"
+## Executive Summary: The “Why” and “What”
 
-Gaps in stock prices occur when there is a notable difference between the closing price of one day and the opening price on the next day, without any trading occurring between these two prices. This can happen due to several factors such as earnings announcements, other market news, or overall economic shifts. 
-
-Gap fills happen when the price moves back to the original pre-gap level. This often occurs because prices tend to return to a state of equili...
+**Gap Fill Strategies** are a critical component of a trader's toolkit, particularly appealing due to their simplicity and directness. A 'gap' in trading terms refers to a situation where a financial instrument’s price significantly changes with no trading occurring in between. Essentially, the price 'jumps' from one level to another, creating an empty space, or 'gap', on the price chart. Gap fills happen when price moves back to the original pre-gap l...
 
 **[Read the full 15-minute lesson in the Academy](/academy/gap-fill-strategies-lesson)**

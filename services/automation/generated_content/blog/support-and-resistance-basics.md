@@ -11,10 +11,10 @@ image: "/academy-assets/support-and-resistance-basics-concept.png"
 
 ## Executive Summary: The "Why" and "What"
 
-### Why Learn About Support and Resistance?
+### Why Learn Support and Resistance?
+Support and resistance levels are fundamental to understanding market movements and trader psychology. They are crucial tools for predicting future price actions, making informed trading decisions, and managing risk effectively.
 
-Support and resistance levels are fundamental concepts in technical analysis and essential tools in a trader's arsenal. Understanding these concepts can significantly improve your decision-making process in both entering and exiting trades. They help in identifying potential turning points in the price of an asset, making them critical for risk management and trade planning.
-
-### What Are Support and Resista...
+### What are Support and Resistance?
+- **Support** is a price level where a downtrend can be expected to pause due to a concentration of demand. As the price of an asset drops, demand for ...
 
 **[Read the full 15-minute lesson in the Academy](/academy/support-and-resistance-basics-lesson)**

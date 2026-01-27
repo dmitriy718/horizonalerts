@@ -11,8 +11,8 @@ image: "/academy-assets/rsi-divergence-strategies-concept.png"
 
 ## Executive Summary
 
-### The "Why" and "What" of RSI Divergence
+The **Relative Strength Index (RSI)** is widely recognized in the field of technical analysis and offers valuable insights into market momentum and potential reversal points. An **RSI Divergence** occurs when the indicator does not confirm the price action; instead, it moves in the opposite direction. This lesson will delve into the strategy behind utilizing RSI divergence for trading, focusing on how to predict and act upon potential market reversals effectively.
 
-RSI Divergence is a sophisticated trading strategy used in the financial markets to predict potential reversals in price trends. This approach capitalizes on the divergence between the Relative Strength Index (RSI), a momentum oscillator that measures the speed and change of price movements, and the price action itself. The rationale behind this strategy is grounded in identifying discrepancies where the price of an asset makes a ...
+Understa...
 
 **[Read the full 15-minute lesson in the Academy](/academy/rsi-divergence-strategies-lesson)**

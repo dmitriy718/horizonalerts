@@ -9,10 +9,8 @@ image: "/academy-assets/level-2-data-reading-concept.png"
 
 *An excerpt from our Academy Module.*
 
-## Executive Summary: The "Why" and "What"
+## Executive Summary: The "Why" and "What" of Level 2 Data
 
-**Level 2 Data** is a critical resource for advanced traders that offers a deeper look into the market's supply and demand dynamics. Essentially, Level 2 data provides a view beyond the basic price and volume information available in Level 1 data. It displays the real-time bids and asks at various price levels for a specific security, showcasing not only the best bid and ask prices available but also the depth of prices on the trading book.
-
-Understand...
+Level 2 data, also known as market depth or the order book, provides comprehensive insights into the real-time bids and offers for a security beyond the standard Level 1 market data (best bid and offer). Understanding Level 2 data empowers traders, particularly at the institutional level, to decode market dynamics more thoroughly, identify liquidity pools, and anticipate price movements with greater precision. It profiles the depth of t...
 
 **[Read the full 15-minute lesson in the Academy](/academy/level-2-data-reading-lesson)**

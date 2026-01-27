@@ -9,8 +9,10 @@ image: "/academy-assets/news-trading-hazards-concept.png"
 
 *An excerpt from our Academy Module.*
 
-## Executive Summary: The "Why" and "What"
+## Executive Summary: Understanding News Trading Hazards
 
-News trading is a popular strategy employed by traders to capitalize on financial market volatility around major news events. This approach can seem alluring because of the significant potential for rapid profits. However, it's fraught with risks and complexities, particularly for intermediate traders. Understanding these pitfalls is essential for developing a robust trading strategy that can withstand the challenges posed by news-related market moveme...
+In the volatile world of trading, news events offer both opportunities and risks. **News trading** refers to a strategy whereby traders make decisions based on major news announcements that can affect the price of financial instruments. This approach sounds straightforward but comes with multiple pitfalls, largely stemming from how news influences market psychology and price action.
+
+This lesson will delve into the complexity of trading a...
 
 **[Read the full 15-minute lesson in the Academy](/academy/news-trading-hazards-lesson)**

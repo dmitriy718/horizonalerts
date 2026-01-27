@@ -25,7 +25,7 @@ export default function SupportPage() {
 
     try {
       const token = user ? await user.getIdToken() : null;
-      const endpoint = user ? "/ticket" : "/public/contact";
+      const endpoint = user ? "/help/ticket" : "/help/public/contact";
       const payload = user 
         ? { topic, subject, message } 
         : { name, email, subject: "General Inquiry", message };
