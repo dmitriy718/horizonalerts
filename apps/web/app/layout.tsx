@@ -3,6 +3,7 @@ import Link from "next/link";
 import { DisclaimerBar } from "./ui/DisclaimerBar";
 import { Analytics } from "./ui/Analytics";
 import { Navbar } from "./components/Navbar";
+import { CookieBanner } from "./components/CookieBanner";
 
 export const metadata = {
   title: "Horizon Alerts | Institutional Trade Intelligence",
@@ -18,6 +19,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className="bg-slate-950 text-slate-200 antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
         <Analytics />
+        <CookieBanner />
         <Navbar />
         <main className="mx-auto min-h-screen pt-20">{children}</main>
         <footer className="border-t border-white/5 bg-slate-950 py-12 text-sm text-slate-400">
