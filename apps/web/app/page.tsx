@@ -87,21 +87,35 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="hidden lg:block">
-             <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-1 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+          <div className="mt-12 lg:mt-0 lg:block transform transition-transform hover:scale-105 duration-500">
+             <div className="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl p-2 shadow-2xl shadow-indigo-500/20 ring-1 ring-white/10">
+                <div className="flex items-center justify-between border-b border-white/5 px-4 py-3 bg-white/5 rounded-t-xl">
                   <div className="flex gap-1.5">
-                    <div className="h-2.5 w-2.5 rounded-full bg-slate-700" />
-                    <div className="h-2.5 w-2.5 rounded-full bg-slate-700" />
-                    <div className="h-2.5 w-2.5 rounded-full bg-slate-700" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-red-500/50" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-amber-500/50" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-emerald-500/50" />
                   </div>
-                  <span className="text-[10px] font-mono text-slate-500 uppercase">Audit_Ledger_v1.04</span>
+                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Audit_Ledger_v1.04</span>
                 </div>
-                <div className="space-y-1 p-4 font-mono text-xs">
-                  <div className="text-emerald-400">[2026-01-27 14:02:11] SIGNAL_LOCKED: NVDA / INSTITUTIONAL_VICE / ENTRY: 612.40</div>
-                  <div className="text-slate-500">[2026-01-27 14:02:11] LOG_IMMUTABLE: SUCCESS</div>
-                  <div className="text-indigo-400">[2026-01-27 14:15:00] PUBLIC_FEED_DELAYED_PUBLISH: OK</div>
-                  <div className="text-slate-600 animate-pulse">_</div>
+                <div className="space-y-2 p-6 font-mono text-xs md:text-sm leading-relaxed">
+                  <div className="flex gap-3">
+                    <span className="text-slate-500">[14:02:11]</span>
+                    <span className="text-emerald-400">SIGNAL_LOCKED:</span>
+                    <span className="text-white">NVDA / INSTITUTIONAL_VICE / ENTRY: 612.40</span>
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="text-slate-500">[14:02:11]</span>
+                    <span className="text-blue-400">LOG_IMMUTABLE:</span>
+                    <span className="text-slate-300">SUCCESS {`{ hash: 0x8a... }`}</span>
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="text-slate-500">[14:15:00]</span>
+                    <span className="text-indigo-400">PUBLIC_FEED_DELAYED:</span>
+                    <span className="text-slate-300">PUBLISHED</span>
+                  </div>
+                  <div className="flex gap-3 animate-pulse">
+                    <span className="text-slate-500">_</span>
+                  </div>
                 </div>
              </div>
           </div>
