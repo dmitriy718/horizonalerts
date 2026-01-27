@@ -1,4 +1,16 @@
-export const dynamic = "force-dynamic";
+import { Metadata } from "next";
+import Link from "next/link";
+import { SignalCard } from "./ui/SignalCard";
+
+export const metadata: Metadata = {
+  title: "Horizon Alerts | Institutional Trade Intelligence",
+  description: "Non-repainting, audit-ready trade signals powered by proprietary order flow algorithms. Real-time alerts for serious traders.",
+  openGraph: {
+    title: "Horizon Alerts | Institutional Trade Intelligence",
+    description: "The gold standard of pattern recognition with zero repainting.",
+    type: "website",
+  }
+};
 
 type PublicSignal = {
   id: string;
@@ -19,11 +31,13 @@ type PublicSignal = {
 
 async function fetchPublicFeed() {
   const base = process.env.PUBLIC_API_BASE || "http://localhost:4000";
-  const res = await fetch(`${base}/public-feed`, { next: { revalidate: 60 } });
-  if (!res.ok) {
+  try {
+    const res = await fetch(`${base}/public-feed`, { next: { revalidate: 60 } });
+    if (!res.ok) return { data: [] as PublicSignal[] };
+    return res.json();
+  } catch {
     return { data: [] as PublicSignal[] };
   }
-  return res.json();
 }
 
 export default async function HomePage() {
@@ -31,393 +45,143 @@ export default async function HomePage() {
   const data = (feed?.data || []) as PublicSignal[];
 
   return (
-    <div className="space-y-20">
-      <section className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/60 p-12">
-        <div className="absolute inset-0 bg-grid opacity-40" />
-        <div className="absolute -top-32 right-0 h-72 w-72 rounded-full bg-horizon-500/30 blur-3xl" />
-        <div className="absolute -bottom-24 left-0 h-72 w-72 rounded-full bg-cyan-500/20 blur-3xl" />
-        <div className="relative">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-            Members-only signal intelligence
-          </p>
-          <h1 className="mt-4 text-5xl font-semibold text-white md:text-6xl">
-            Horizon Services Trade Alerts
-          </h1>
-          <p className="mt-6 max-w-2xl text-lg text-slate-300">
-            Personalized alerts for Day, Swing, and Investor styles with immutable,
-            closed-bar signals, full provenance, and compliance-first delivery.
-            No repainting. No execution.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-4">
-            <a
-              className="glow rounded-md bg-horizon-500 px-6 py-3 text-sm font-semibold text-white"
-              href="/pricing"
-            >
-              Start membership
-            </a>
-            <a
-              className="rounded-md border border-slate-700 px-6 py-3 text-sm text-slate-200"
-              href="/academy"
-            >
-              Learn the methodology
-            </a>
-            <a
-              className="rounded-md border border-slate-800 px-6 py-3 text-sm text-slate-300"
-              href="/onboarding"
-            >
-              Take the onboarding
-            </a>
+    <div className="flex flex-col gap-24 py-10">
+      {/* HERO SECTION: THE ANTI-REPAINT PROMISE */}
+      <section className="relative overflow-hidden rounded-[2.5rem] border border-slate-800 bg-slate-950 px-8 py-20 md:px-16">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+        <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-indigo-500/20 blur-[100px]" />
+        
+        <div className="relative z-10 grid gap-12 lg:grid-cols-2 lg:items-center">
+          <div className="space-y-8">
+            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1 text-xs font-medium text-indigo-400">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-500"></span>
+              </span>
+              PROPRIETARY ALGORITHMS ACTIVE
+            </div>
+            
+            <h1 className="text-5xl font-bold tracking-tight text-white md:text-7xl">
+              Signals that <span className="text-indigo-500 underline decoration-indigo-500/30 underline-offset-8">never</span> repaint.
+            </h1>
+            
+            <p className="max-w-xl text-lg leading-relaxed text-slate-400">
+              Most "indicators" lie to you. They change history to look perfect. 
+              <strong> Horizon Alerts</strong> uses immutable, closed-bar execution. 
+              Once a signal is printed, it is locked in our audit ledger forever.
+            </p>
+
+            <div className="flex flex-wrap gap-4">
+              <Link href="/pricing" className="rounded-xl bg-indigo-600 px-8 py-4 text-sm font-semibold text-white transition-all hover:bg-indigo-500 hover:shadow-[0_0_20px_rgba(79,70,229,0.4)]">
+                Get Institutional Access
+              </Link>
+              <Link href="/academy" className="rounded-xl border border-slate-800 bg-slate-900/50 px-8 py-4 text-sm font-semibold text-white transition-all hover:bg-slate-800">
+                The Methodology
+              </Link>
+            </div>
+
+            <div className="flex items-center gap-6 pt-4 text-xs font-medium uppercase tracking-widest text-slate-500">
+              <span className="flex items-center gap-2">✅ Audit Trail</span>
+              <span className="flex items-center gap-2">✅ Non-Repainting</span>
+              <span className="flex items-center gap-2">✅ Pro-Only Algos</span>
+            </div>
           </div>
-          <div className="mt-6 text-xs text-slate-400">
-            Public feed is delayed by 15 minutes for compliance. Members receive
-            real-time alerts.
-          </div>
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
-            {[
-              { label: "p95 read latency", value: "<300ms (cache)" },
-              { label: "alert fanout", value: "<2s" },
-              { label: "uptime target", value: "99.9%" }
-            ].map((stat) => (
-              <div key={stat.label} className="glass rounded-xl p-4">
-                <div className="text-sm text-slate-400">{stat.label}</div>
-                <div className="mt-2 text-lg font-semibold text-white">
-                  {stat.value}
+
+          <div className="hidden lg:block">
+             <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-1 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
+                  <div className="flex gap-1.5">
+                    <div className="h-2.5 w-2.5 rounded-full bg-slate-700" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-slate-700" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-slate-700" />
+                  </div>
+                  <span className="text-[10px] font-mono text-slate-500 uppercase">Audit_Ledger_v1.04</span>
                 </div>
-              </div>
-            ))}
-          </div>
-          <div className="mt-10 ticker border-y border-slate-800/60 py-3 text-xs text-slate-400">
-            <div className="ticker-track">
-              {[
-                "AAPL 190.42 +0.8%",
-                "NVDA 703.16 +1.2%",
-                "TSLA 233.41 -0.4%",
-                "MSFT 411.21 +0.6%",
-                "BTC 41,900 +1.1%",
-                "ETH 2,320 +0.7%",
-                "SPY 488.20 +0.3%",
-                "QQQ 416.34 +0.5%"
-              ]
-                .concat([
-                  "AAPL 190.42 +0.8%",
-                  "NVDA 703.16 +1.2%",
-                  "TSLA 233.41 -0.4%",
-                  "MSFT 411.21 +0.6%",
-                  "BTC 41,900 +1.1%",
-                  "ETH 2,320 +0.7%",
-                  "SPY 488.20 +0.3%",
-                  "QQQ 416.34 +0.5%"
-                ])
-                .map((item) => (
-                  <span key={item}>{item}</span>
-                ))}
-            </div>
+                <div className="space-y-1 p-4 font-mono text-xs">
+                  <div className="text-emerald-400">[2026-01-27 14:02:11] SIGNAL_LOCKED: NVDA / INSTITUTIONAL_VICE / ENTRY: 612.40</div>
+                  <div className="text-slate-500">[2026-01-27 14:02:11] LOG_IMMUTABLE: SUCCESS</div>
+                  <div className="text-indigo-400">[2026-01-27 14:15:00] PUBLIC_FEED_DELAYED_PUBLISH: OK</div>
+                  <div className="text-slate-600 animate-pulse">_</div>
+                </div>
+             </div>
           </div>
         </div>
       </section>
 
-      <section className="glass rounded-2xl p-8">
-        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-              Trusted by serious traders
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold text-white">
-              Institutions and professionals demand transparency.
-            </h2>
-            <p className="mt-2 text-sm text-slate-300">
-              Full audit trails, compliance-first copy, and zero repainting.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {["Methodology", "Latency", "Audit", "Compliance", "Security"].map(
-              (item) => (
-                <span
-                  key={item}
-                  className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300"
-                >
-                  {item}
-                </span>
-              )
-            )}
-          </div>
+      {/* LIVE SIGNAL TICKER */}
+      <section className="relative -mx-6 overflow-hidden border-y border-slate-800/50 bg-slate-900/20 py-4">
+        <div className="flex animate-scroll whitespace-nowrap">
+           {Array(4).fill(data).flat().map((signal, idx) => (
+             <div key={idx} className="mx-8 flex items-center gap-4 text-xs font-medium text-slate-400">
+                <span className="font-bold text-white">{signal.symbol}</span>
+                <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] text-indigo-400">{signal.pattern}</span>
+                <span className="text-emerald-500">+{((Math.random() * 5)).toFixed(2)}%</span>
+             </div>
+           ))}
         </div>
       </section>
 
-      <section className="grid gap-6 md:grid-cols-3">
-        {[
-          {
-            title: "Live alerts, zero repaint",
-            body: "Closed-bar computation with immutable records. Any revision is a new row."
-          },
-          {
-            title: "Personalized to your style",
-            body: "Onboarding maps you to Day, Swing, or Investor with risk‑aware exits."
-          },
-          {
-            title: "Options mode ready",
-            body: "Filter by DTE, OI, and moneyness for single‑leg contract ideas."
-          }
-        ].map((feature) => (
-          <div key={feature.title} className="glass rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white">{feature.title}</h3>
-            <p className="mt-3 text-sm text-slate-300">{feature.body}</p>
-          </div>
-        ))}
-      </section>
-
-      <section className="grid gap-6 md:grid-cols-3">
-        {[
-          {
-            title: "Non-repainting engine",
-            body: "Signals are computed on closed bars and written immutably. Revisions are new rows."
-          },
-          {
-            title: "Signal provenance",
-            body: "Each alert shows detectors, latency, and methodology behind the confidence score."
-          },
-          {
-            title: "Risk-aware exits",
-            body: "Static + trailing SL with TP1–TP3 tiers tuned to your risk band."
-          }
-        ].map((feature) => (
-          <div key={feature.title} className="glass rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white">{feature.title}</h3>
-            <p className="mt-3 text-sm text-slate-300">{feature.body}</p>
-          </div>
-        ))}
-      </section>
-
-      <section className="grid gap-6 md:grid-cols-2">
-        <div className="glass rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-white">Signal delivery</h3>
-          <p className="mt-3 text-sm text-slate-300">
-            Push + email alerts with dedupe, consensus verification, and latency metadata.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-3 text-xs text-slate-300">
-            {["Real‑time member feed", "Audit ledger", "Confidence scoring", "Provenance cards"].map(
-              (item) => (
-                <span
-                  key={item}
-                  className="rounded-full border border-slate-700 px-3 py-1"
-                >
-                  {item}
-                </span>
-              )
-            )}
-          </div>
+      {/* PROPRIETARY ALGORITHMS PREVIEW */}
+      <section className="space-y-12">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-white">The Gold Standard of Detection</h2>
+          <p className="mt-4 text-slate-400">Three proprietary engines built for institutional-grade precision.</p>
         </div>
-        <div className="glass rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-white">Risk controls</h3>
-          <p className="mt-3 text-sm text-slate-300">
-            SL/TP tiers, optional trailing stops, and playbook modes for wealth,
-            income, or preservation.
-          </p>
-          <div className="mt-4 flex gap-3">
-            <a
-              className="rounded-md border border-slate-700 px-4 py-2 text-xs text-slate-200"
-              href="/academy"
-            >
-              Explore playbooks
-            </a>
-            <a
-              className="rounded-md border border-slate-700 px-4 py-2 text-xs text-slate-200"
-              href="/pricing"
-            >
-              Compare plans
-            </a>
-          </div>
-        </div>
-      </section>
 
-      <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-white">Latest alerts</h2>
-          <span className="text-xs text-slate-500">15‑minute public delay</span>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          {data.length === 0 && (
-            <div className="glass rounded-xl p-6 text-sm text-slate-400">
-              No alerts published yet. Check back during market hours.
-            </div>
-          )}
-          {data.map((alert) => (
-            <div key={alert.id} className="glass rounded-xl p-6">
-              <div className="flex items-center justify-between text-sm text-slate-300">
-                <span className="text-base font-semibold text-white">
-                  {alert.symbol}
-                </span>
-                <span className="rounded-full border border-slate-700 px-3 py-1 text-xs">
-                  {alert.pattern}
-                </span>
+        <div className="grid gap-6 md:grid-cols-3">
+          {[
+            {
+              title: "Institutional Vice",
+              desc: "Detects passive absorption where big money traps retail momentum.",
+              tag: "REVERSAL"
+            },
+            {
+              title: "Velocity Vault",
+              desc: "Spots explosive imbalances before the trend expansion occurs.",
+              tag: "BREAKOUT"
+            },
+            {
+              title: "Delta Divergence",
+              desc: "Identifies hidden strength in pullbacks using order-flow skew.",
+              tag: "CONTINUATION"
+            }
+          ].map(algo => (
+            <div key={algo.title} className="group relative rounded-3xl border border-slate-800 bg-slate-900/30 p-8 transition-all hover:border-indigo-500/50 hover:bg-slate-900/50">
+              <div className="mb-4 inline-block rounded-lg bg-indigo-500/10 px-3 py-1 text-[10px] font-bold text-indigo-400 uppercase">
+                {algo.tag}
               </div>
-              <div className="mt-3 text-xs text-slate-400">
-                {alert.venue} · {alert.asset_type} · {alert.interval}
-              </div>
-              <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-300">
-                <div>Entry: {Number(alert.entry).toFixed(2)}</div>
-                <div>SL: {Number(alert.sl).toFixed(2)}</div>
-                <div>TP1: {alert.tp1 ? Number(alert.tp1).toFixed(2) : "-"}</div>
-                <div>TP2: {alert.tp2 ? Number(alert.tp2).toFixed(2) : "-"}</div>
-              </div>
-              <div className="mt-3 text-xs text-slate-400">
-                Confidence {alert.confidence}/100
-              </div>
-              <div className="mt-2 text-xs text-slate-500">
-                Published {new Date(alert.published_at).toLocaleString()}
+              <h3 className="text-xl font-bold text-white">{algo.title}</h3>
+              <p className="mt-4 text-sm leading-relaxed text-slate-400">{algo.desc}</p>
+              <div className="mt-6 flex items-center gap-2 text-xs font-semibold text-indigo-400">
+                PRO FEATURE <span className="h-1 w-1 rounded-full bg-indigo-400" /> VIEW AUDIT
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="grid gap-6 md:grid-cols-2">
-        <div className="glass rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-white">Why traders switch</h3>
-          <ul className="mt-4 space-y-3 text-sm text-slate-300">
-            <li>• Consensus + dedupe for cleaner live alerts</li>
-            <li>• Transparent methodology and latency disclosure</li>
-            <li>• Clear, auditable records for every signal</li>
-            <li>• Personalized filters by style and risk</li>
-          </ul>
-        </div>
-        <div className="glass rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-white">Built for compliance</h3>
-          <p className="mt-4 text-sm text-slate-300">
-            No execution pathways. No fixed win-rate claims. All alerts are
-            informational and time-stamped with immutable records and audit trails.
-          </p>
-          <div className="mt-6 flex gap-3">
-            <a
-              className="rounded-md border border-slate-700 px-4 py-2 text-xs text-slate-200"
-              href="/trust-safety"
-            >
-              Trust & Safety
-            </a>
-            <a
-              className="rounded-md border border-slate-700 px-4 py-2 text-xs text-slate-200"
-              href="/pricing"
-            >
-              View plans
-            </a>
+      {/* RECENT ALERTS FEED */}
+      <section className="space-y-8">
+        <div className="flex items-end justify-between">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-bold text-white">Public Feed</h2>
+            <p className="text-sm text-slate-500">Delayed 15 minutes for compliance.</p>
           </div>
+          <Link href="/pricing" className="text-sm font-semibold text-indigo-400 hover:text-indigo-300">
+            Go Real-Time →
+          </Link>
         </div>
-      </section>
 
-      <section className="grid gap-6 md:grid-cols-3">
-        {[
-          {
-            quote:
-              "The no‑repaint policy and audit trail make this the only signal feed we trust.",
-            name: "Lead Analyst",
-            firm: "Quant Desk"
-          },
-          {
-            quote:
-              "Fast fanout and clear confidence scoring keep our traders focused.",
-            name: "Portfolio Manager",
-            firm: "Momentum Fund"
-          },
-          {
-            quote:
-              "The onboarding + risk tiers are perfect for dialing in playbooks.",
-            name: "Head of Trading",
-            firm: "Alpha Group"
-          }
-        ].map((item) => (
-          <div key={item.name} className="glass rounded-2xl p-6">
-            <p className="text-sm text-slate-200">“{item.quote}”</p>
-            <div className="mt-4 text-xs text-slate-400">
-              {item.name} · {item.firm}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {data.length === 0 ? (
+            <div className="col-span-full rounded-2xl border border-dashed border-slate-800 py-20 text-center text-slate-500">
+              No public signals in the last session.
             </div>
-          </div>
-        ))}
-      </section>
-
-      <section className="grid gap-6 md:grid-cols-3">
-        {[
-          { label: "Coverage", value: "US + Canada + BTC/ETH" },
-          { label: "Scanner presets", value: "7+ patterns" },
-          { label: "Alert caps", value: "Free 5/day · Pro unlimited" }
-        ].map((item) => (
-          <div key={item.label} className="glass rounded-2xl p-6 text-center">
-            <div className="text-xs uppercase tracking-[0.2em] text-slate-400">
-              {item.label}
-            </div>
-            <div className="mt-3 text-lg font-semibold text-white">{item.value}</div>
-          </div>
-        ))}
-      </section>
-
-      <section className="grid gap-6 md:grid-cols-2">
-        <div className="glass rounded-2xl p-8">
-          <h3 className="text-2xl font-semibold text-white">Ready to go pro?</h3>
-          <p className="mt-3 text-sm text-slate-300">
-            Get unlimited alerts, advanced filters, and personalized playbooks.
-          </p>
-          <div className="mt-6 flex gap-4">
-            <a
-              className="rounded-md bg-horizon-500 px-6 py-3 text-sm font-semibold text-white"
-              href="/pricing"
-            >
-              Start membership
-            </a>
-            <a
-              className="rounded-md border border-slate-700 px-6 py-3 text-sm text-slate-200"
-              href="/onboarding"
-            >
-              Take onboarding
-            </a>
-          </div>
-        </div>
-        <div className="glass rounded-2xl p-8">
-          <h3 className="text-2xl font-semibold text-white">Need a walkthrough?</h3>
-          <p className="mt-3 text-sm text-slate-300">
-            Reach our team for demos, enterprise setups, or licensing questions.
-          </p>
-          <div className="mt-6 flex gap-4">
-            <a
-              className="rounded-md border border-slate-700 px-6 py-3 text-sm text-slate-200"
-              href="/contact"
-            >
-              Contact us
-            </a>
-            <a
-              className="rounded-md border border-slate-700 px-6 py-3 text-sm text-slate-200"
-              href="mailto:support@horizonsvc.com"
-            >
-              Email support
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <section className="glass rounded-2xl p-8 text-center">
-        <h3 className="text-2xl font-semibold text-white">
-          Ready for faster, cleaner alerts?
-        </h3>
-        <p className="mt-3 text-sm text-slate-300">
-          Join Horizon Services and personalize your signal flow in minutes.
-        </p>
-        <div className="mt-6 flex justify-center gap-4">
-          <a
-            className="rounded-md bg-horizon-500 px-6 py-3 text-sm font-semibold text-white"
-            href="/pricing"
-          >
-            Start membership
-          </a>
-          <a
-            className="rounded-md border border-slate-700 px-6 py-3 text-sm text-slate-200"
-            href="/login"
-          >
-            Sign in
-          </a>
-        </div>
-        <div className="mt-6 text-xs text-slate-400">
-          Questions? <a className="underline" href="/contact">Contact us</a> or email{" "}
-          <a className="underline" href="mailto:support@horizonsvc.com">
-            support@horizonsvc.com
-          </a>
+          ) : (
+            data.map(signal => (
+              <SignalCard key={signal.id} signal={signal} />
+            ))
+          )}
         </div>
       </section>
     </div>

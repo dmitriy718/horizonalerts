@@ -13,17 +13,30 @@ function candidatePaths() {
   return envPath ? [envPath, ...defaults] : defaults;
 }
 
-function resolveServiceAccountPath() {
+function resolveServiceAccount() {
+  // Priority 1: Base64 Encoded Environment Variable (Best for Docker/VPS)
+  const base64Config = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+  if (base64Config) {
+    try {
+      const decoded = Buffer.from(base64Config, "base64").toString("utf8");
+      return JSON.parse(decoded);
+    } catch (err) {
+      console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT_BASE64", err);
+    }
+  }
+
+  // Priority 2: File Path
   for (const filePath of candidatePaths()) {
     if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-      return filePath;
+      const raw = fs.readFileSync(filePath, "utf8");
+      return JSON.parse(raw);
     }
   }
   return null;
 }
 
 export function firebaseConfigured() {
-  return Boolean(resolveServiceAccountPath());
+  return Boolean(resolveServiceAccount());
 }
 
 export function getFirebaseApp() {
@@ -31,13 +44,10 @@ export function getFirebaseApp() {
     return app;
   }
 
-  const filePath = resolveServiceAccountPath();
-  if (!filePath) {
+  const serviceAccount = resolveServiceAccount();
+  if (!serviceAccount) {
     return null;
   }
-
-  const raw = fs.readFileSync(filePath, "utf8");
-  const serviceAccount = JSON.parse(raw);
 
   app = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
