@@ -54,7 +54,7 @@ function getTransporter(type: EmailType) {
   }
 
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.ionos.com",
+    host: process.env.SMTP_HOST || "smtp.siteprotect.com",
     port: Number(process.env.SMTP_PORT) || 587,
     secure: false, // true for 465
     auth: { user, pass }
@@ -76,10 +76,10 @@ export async function sendEmail({ to, type, subject, html, template, data, attac
 
   let from;
   switch (type) {
-    case "support": from = "Horizon Support <support@horizonsvc.com>"; break;
-    case "alerts": from = "Horizon Alerts <alerts@horizonsvc.com>"; break;
-    case "marketing": from = "Horizon Insights <marketing@horizonsvc.com>"; break;
-    case "security": from = "Horizon Security <security@horizonsvc.com>"; break;
+    case "support": from = process.env.SMTP_SUPPORT_FROM || "Horizon Support <support@horizonsvc.com>"; break;
+    case "alerts": from = process.env.SMTP_ALERTS_FROM || "Horizon Alerts <alerts@horizonsvc.com>"; break;
+    case "marketing": from = process.env.SMTP_MARKETING_FROM || "Horizon Insights <marketing@horizonsvc.com>"; break;
+    case "security": from = process.env.SMTP_SECURITY_FROM || "Horizon Security <security@horizonsvc.com>"; break;
   }
 
   try {
