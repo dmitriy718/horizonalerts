@@ -12,5 +12,9 @@
     "dev:web": "npm --workspace apps/web run dev",
     "dev:signal": "npm --workspace services/signal-engine run dev",
     "dev:mobile": "npm --workspace apps/mobile run start"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.0",
+    "playwright": "^1.58.0"
   }
 }

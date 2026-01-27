@@ -1,14 +1,20 @@
-type Bar = {
+export type Bar = {
   symbol: string;
+  venue: string;
+  assetType: string;
   open: number;
   high: number;
   low: number;
   close: number;
   volume: number;
   time: string;
+  interval: string;
+  delta?: number;    // Aggressive Buy/Sell imbalance
+  cvd?: number;      // Cumulative Volume Delta
+  hvn_levels?: number[]; // High Volume Nodes from Volume Profile
 };
 
-type Signal = {
+export type Signal = {
   symbol: string;
   venue: string;
   assetType: string;
@@ -29,8 +35,42 @@ type Signal = {
   optionsMeta: Record<string, unknown>;
 };
 
-export function runDetectors(_bar: Bar): Signal[] {
-  // Placeholder. Real implementation should add detectors:
-  // bullish/bearish flag, breakout/breakdown, RSI divergence, etc.
-  return [];
+import { detectVice } from "./vice.js";
+import { detectVault } from "./vault.js";
+import { detectDivergence } from "./divergence.js";
+
+
+
+export function runDetectors(bar: Bar): Signal[] {
+
+  const signals: Signal[] = [];
+
+
+
+  // 1. Proprietary: Institutional Vice
+
+  const vice = detectVice(bar);
+
+  if (vice) signals.push(vice);
+
+
+
+  // 2. Proprietary: Velocity Vault
+
+  const vault = detectVault(bar);
+
+  if (vault) signals.push(vault);
+
+
+
+  // 3. Proprietary: Delta Divergence
+
+  const div = detectDivergence(bar);
+
+  if (div) signals.push(div);
+
+
+
+  return signals;
+
 }

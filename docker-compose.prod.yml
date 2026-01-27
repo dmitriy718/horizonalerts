@@ -99,5 +99,18 @@ services:
       timeout: 5s
       retries: 5
 
+  signal-engine:
+    build:
+      context: .
+      dockerfile: services/signal-engine/Dockerfile
+      target: prod
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+    depends_on:
+      - postgres
+      - redis
+    restart: always
+
 volumes:
   pgdata:
