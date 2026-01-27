@@ -27,6 +27,7 @@ COPY apps/web/postcss.config.cjs ./postcss.config.cjs
 COPY apps/web/tailwind.config.ts ./tailwind.config.ts
 COPY apps/web/public ./public
 COPY apps/web/app ./app
+COPY content ./content
 
 FROM base AS dev
 EXPOSE 3000

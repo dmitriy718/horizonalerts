@@ -1,52 +1,63 @@
 import { FastifyInstance } from "fastify";
-import { z } from "zod";
 import { query } from "../db.js";
-import { configureSendgrid, sendEmail, sendgridConfigured } from "../notifications/sendgrid.js";
+import { sendEmail } from "../services/email.js";
+import { z } from "zod";
 
 const ticketSchema = z.object({
-  subject: z.string().min(3).max(120),
-  message: z.string().min(10).max(2000)
+  topic: z.string(),
+  subject: z.string(),
+  message: z.string(),
+  file: z.any().optional() // Handled via multipart usually, but simplifying for JSON payload for now
 });
 
 export async function helpRoutes(server: FastifyInstance) {
-  configureSendgrid();
-  server.post("/ticket", { preHandler: server.requireAuth }, async (request, reply) => {
-    const parse = ticketSchema.safeParse(request.body);
-    if (!parse.success) {
-      return reply.code(400).send({ error: "invalid_request" });
-    }
+  
+  // Public Contact Form
+  server.post("/public/contact", async (req, reply) => {
+    const { name, email, subject, message } = req.body as any;
+    
+    // Send Confirmation to User
+    await sendEmail({
+      to: email,
+      type: "support",
+      subject: `Received: ${subject}`,
+      template: "contact",
+      data: { name, message }
+    });
 
-    const { uid, email } = request.user;
-    const { subject, message } = parse.data;
+    // Notify Admin
+    await sendEmail({
+      to: "dmitriy@horizonsvc.com", // Admin email
+      type: "support",
+      subject: `[Contact Form] ${subject}`,
+      html: `From: ${name} (${email})<br/>Message: ${message}`
+    });
 
-    const rows = await query<{ id: number }>(
-      `insert into help_tickets (uid, subject, message, status, created_at, email)
-       values ($1, $2, $3, 'open', now(), $4)
-       returning id`,
-      [uid, subject, message, email]
+    return { success: true };
+  });
+
+  // Auth-only Ticket System
+  server.post("/ticket", { preHandler: server.requireAuth }, async (req, reply) => {
+    const { uid, email } = req.user;
+    const body = ticketSchema.parse(req.body);
+
+    // Save to DB
+    const res = await query(
+      `INSERT INTO help_tickets (uid, email, subject, message, status)
+       VALUES ($1, $2, $3, $4, 'open') RETURNING id`,
+      [uid, email, `[${body.topic}] ${body.subject}`, body.message]
     );
+    const ticketId = res[0].id;
 
-    const ticketId = rows[0]?.id;
-    if (sendgridConfigured() && ticketId) {
-      const userHtml = `<p>We received your ticket.</p><p>Ticket ID: ${ticketId}</p>`;
-      await sendEmail(email, "Support ticket received", userHtml);
+    // Email Confirmation
+    await sendEmail({
+      to: email,
+      type: "support",
+      subject: `Support Request #${ticketId}`,
+      template: "ticket",
+      data: { ticketId, topic: body.topic, message: body.message }
+    });
 
-      const supportEmail = process.env.SUPPORT_EMAIL || "support@horizonsvc.com";
-      const staffHtml = `<p>New ticket from ${email}</p><p>${message}</p>`;
-      await sendEmail(supportEmail, `New ticket: ${subject}`, staffHtml);
-
-      await query(
-        `insert into email_log (uid, template, subject, sent_at, to_addr)
-         values ($1, $2, $3, now(), $4)`,
-        [uid, "help_ticket_user", "Support ticket received", email]
-      );
-      await query(
-        `insert into email_log (uid, template, subject, sent_at, to_addr)
-         values ($1, $2, $3, now(), $4)`,
-        [uid, "help_ticket_staff", `New ticket: ${subject}`, supportEmail]
-      );
-    }
-
-    return { ok: true };
+    return { success: true, ticketId };
   });
 }
