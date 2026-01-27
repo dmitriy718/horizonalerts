@@ -1,5 +1,8 @@
 import "dotenv/config";
 import { buildServer } from "./server.js";
+import { validateEnv } from "./env.js";
+
+validateEnv();
 
 const port = Number(process.env.PORT || 4000);
 const host = process.env.HOST || "0.0.0.0";

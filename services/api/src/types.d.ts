@@ -21,6 +21,12 @@ declare module "@fastify/jwt" {
 declare module "fastify" {
   interface FastifyRequest {
     rawBody?: Buffer;
+    user: {
+      uid: string;
+      email: string;
+      email_verified: boolean;
+      plan?: "free" | "pro";
+    };
   }
 
   interface FastifyInstance {

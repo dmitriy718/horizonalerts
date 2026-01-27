@@ -3,9 +3,10 @@ import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import jwt from "@fastify/jwt";
 import { registerRoutes } from "./routes/index.js";
+import { firebaseConfigured, verifyFirebaseToken } from "./auth/firebase.js";
 
 export async function buildServer() {
-  const server = Fastify({ logger: true });
+  const server = Fastify({ logger: true, trustProxy: true });
 
   await server.register(cors, {
     origin: true,
@@ -39,12 +40,30 @@ export async function buildServer() {
   server.decorate(
     "requireAuth",
     async (request: FastifyRequest, reply: FastifyReply) => {
-    try {
-      await request.jwtVerify();
-    } catch {
-      return reply.code(401).send({ error: "unauthorized" });
+      const authHeader = request.headers.authorization || "";
+      const token = authHeader.startsWith("Bearer ")
+        ? authHeader.slice(7)
+        : "";
+      const firebaseEnabled = firebaseConfigured();
+
+      if (firebaseEnabled && token) {
+        try {
+          const user = await verifyFirebaseToken(token);
+          if (user) {
+            request.user = user as any;
+            return;
+          }
+        } catch {
+          return reply.code(401).send({ error: "unauthorized" });
+        }
+      }
+
+      try {
+        await request.jwtVerify();
+      } catch {
+        return reply.code(401).send({ error: "unauthorized" });
+      }
     }
-  }
   );
 
   await registerRoutes(server);
