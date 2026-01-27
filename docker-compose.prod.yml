@@ -112,5 +112,16 @@ services:
       - redis
     restart: always
 
+  automation:
+    build:
+      context: .
+      dockerfile: services/automation/Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    volumes:
+      - ./content:/app/content
+    restart: always
+
 volumes:
   pgdata:

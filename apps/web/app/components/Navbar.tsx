@@ -5,6 +5,38 @@ import { useState, useEffect } from "react";
 import { Menu, X, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+function Logo() {
+  return (
+    <div className="relative flex items-center justify-center">
+      {/* The Shining Horizon Glow (Back) */}
+      <div className="absolute -inset-2 rounded-full bg-cyan-500/30 blur-lg animate-pulse-slow" />
+      
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10">
+        <defs>
+          <linearGradient id="logoGradient" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+            <stop stopColor="#06b6d4" /> {/* Cyan-500 */}
+            <stop offset="1" stopColor="#4f46e5" /> {/* Indigo-600 */}
+          </linearGradient>
+          <radialGradient id="horizonShine" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(20 20) rotate(90) scale(20)">
+            <stop stopColor="white" stopOpacity="0.6" />
+            <stop offset="1" stopColor="white" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        
+        {/* Main Box */}
+        <rect x="2" y="2" width="36" height="36" rx="8" fill="url(#logoGradient)" stroke="white" strokeOpacity="0.1" strokeWidth="1" />
+        
+        {/* Horizon Arc Effect */}
+        <path d="M2 28 C 2 28, 10 36, 20 36 C 30 36, 38 28, 38 28" stroke="white" strokeOpacity="0.3" strokeWidth="2" fill="none" />
+        <rect x="2" y="2" width="36" height="36" rx="8" fill="url(#horizonShine)" style={{ mixBlendMode: 'overlay' }} />
+
+        {/* The 'H' */}
+        <text x="20" y="29" fontFamily="monospace" fontSize="24" fontWeight="bold" fill="white" textAnchor="middle">H</text>
+      </svg>
+    </div>
+  );
+}
+
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -30,13 +62,20 @@ export function Navbar() {
   return (
     <header
       className={`fixed top-0 z-50 w-full transition-all duration-300 ${
-        scrolled || isOpen ? "bg-slate-950/90 backdrop-blur-xl border-b border-white/5" : "bg-transparent border-b border-transparent"
+        scrolled || isOpen ? "bg-slate-950/90 backdrop-blur-xl border-b border-white/5 shadow-lg shadow-black/20" : "bg-transparent border-b border-transparent"
       }`}
     >
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
-        <Link href="/" className="relative z-50 flex items-center gap-2 text-xl font-bold tracking-tight text-white">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20" />
-          Horizon
+      <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-6">
+        <Link href="/" className="group relative z-50 flex items-center gap-3">
+          <Logo />
+          <div className="flex flex-col">
+            <span className="text-xl font-bold tracking-tight text-white group-hover:text-cyan-400 transition-colors">
+              Horizon Alerts
+            </span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-400 group-hover:text-cyan-200/70 transition-colors">
+              Institutional Order Flow
+            </span>
+          </div>
         </Link>
 
         {/* Desktop Nav */}
@@ -45,7 +84,7 @@ export function Navbar() {
             <Link
               key={link.name}
               href={link.href}
-              className="text-sm font-medium text-slate-400 transition-colors hover:text-white"
+              className="text-sm font-medium text-slate-400 transition-colors hover:text-white hover:shadow-[0_1px_0_0_white]"
             >
               {link.name}
             </Link>
@@ -53,12 +92,12 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-4 md:flex">
-          <Link href="/login" className="text-sm font-medium text-white hover:text-cyan-400">
+          <Link href="/login" className="text-sm font-medium text-white hover:text-cyan-400 transition-colors">
             Login
           </Link>
           <Link
             href="/pricing"
-            className="rounded-full bg-white/10 px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-white/20"
+            className="btn-primary py-2.5 px-6 text-sm shadow-lg shadow-blue-500/20"
           >
             Get Started
           </Link>
@@ -67,7 +106,7 @@ export function Navbar() {
         {/* Mobile Toggle */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="relative z-50 block rounded-full bg-white/5 p-2 text-white md:hidden"
+          className="relative z-50 block rounded-full bg-white/5 p-2 text-white md:hidden hover:bg-white/10 transition-colors"
         >
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -77,10 +116,10 @@ export function Navbar() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute inset-0 top-0 h-screen w-full bg-slate-950 pt-24 px-6 md:hidden"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "100vh" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="absolute inset-0 top-0 w-full bg-slate-950 pt-28 px-6 md:hidden overflow-hidden"
           >
             <div className="flex flex-col gap-6">
               {navLinks.map((link, i) => (
@@ -88,11 +127,11 @@ export function Navbar() {
                   key={link.name}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
+                  transition={{ delay: i * 0.05 }}
                 >
                   <Link
                     href={link.href}
-                    className="flex items-center justify-between border-b border-white/5 pb-4 text-2xl font-semibold text-white"
+                    className="flex items-center justify-between border-b border-white/5 pb-4 text-2xl font-semibold text-white active:text-cyan-400"
                   >
                     {link.name}
                     <ChevronRight className="text-slate-600" />
