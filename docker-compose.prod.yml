@@ -52,7 +52,9 @@ services:
       SMTP_SECURITY_USER: ${SMTP_SECURITY_USER}
       SMTP_SECURITY_PASS: ${SMTP_SECURITY_PASS}
       SMTP_SECURITY_FROM: ${SMTP_SECURITY_FROM}
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL}
     volumes:
+      - ./content:/app/content
       - ./horizonsvcfirebase.json:/app/horizonsvcfirebase.json:ro
       - ./horizontalv2.json:/app/horizontalv2.json:ro
     ports:
@@ -97,7 +99,7 @@ services:
       NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
       NEXT_PUBLIC_POSTHOG_KEY: ${NEXT_PUBLIC_POSTHOG_KEY}
       NEXT_PUBLIC_POSTHOG_HOST: ${NEXT_PUBLIC_POSTHOG_HOST}
-      PUBLIC_SITE_URL: https://horizonsvc.com
+      PUBLIC_SITE_URL: ${PUBLIC_SITE_URL}
     volumes:
       - ./content:/app/content
     ports:
@@ -123,6 +125,8 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
+    volumes:
+      - ./content:/app/content
     depends_on:
       - postgres
       - redis

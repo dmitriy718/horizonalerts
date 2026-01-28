@@ -28,7 +28,9 @@ export const verifyEmailTemplate = (url: string) => `
 </html>
 `;
 
-export const welcomeTemplate = (name: string) => `
+export const welcomeTemplate = (name: string) => {
+  const base = process.env.PUBLIC_SITE_URL || "https://horizonsvc.com";
+  return `
 <!DOCTYPE html>
 <html>
 <head><style>${styles}</style></head>
@@ -44,13 +46,14 @@ export const welcomeTemplate = (name: string) => `
         <li>Pro Screener Tools</li>
       </ul>
       <p>We are thrilled to have you with us on this journey to decode the market.</p>
-      <center><a href="https://horizonsvc.com/dashboard" class="btn">Launch Terminal</a></center>
+      <center><a href="${base}/dashboard" class="btn">Launch Terminal</a></center>
     </div>
     <div class="footer">&copy; ${new Date().getFullYear()} Horizon Services.</div>
   </div>
 </body>
 </html>
 `;
+};
 
 export const contactConfirmationTemplate = (name: string, message: string) => `
 <!DOCTYPE html>

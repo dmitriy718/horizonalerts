@@ -24,7 +24,15 @@ async function main() {
 
   const getWatchlist = () => {
     try {
-      // Try to find the file. In production, we'll assume it's synced or we rely on fallback.
+      // Try to find the files in the shared volume
+      const contentDir = "/app/content";
+      const day = JSON.parse(fs.readFileSync(path.join(contentDir, "day_candidates.json"), "utf-8"));
+      const swing = JSON.parse(fs.readFileSync(path.join(contentDir, "swing_candidates.json"), "utf-8"));
+      const invest = JSON.parse(fs.readFileSync(path.join(contentDir, "invest_candidates.json"), "utf-8"));
+      
+      const combined = [...new Set([...day, ...swing, ...invest])];
+      if (combined.length > 0) return combined;
+      
       return FALLBACK_TICKERS;
     } catch {
       return FALLBACK_TICKERS;

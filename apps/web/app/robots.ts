@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
+  const base = process.env.PUBLIC_SITE_URL || "https://horizonsvc.com";
   return {
     rules: [
       {
@@ -9,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/"]
       }
     ],
-    sitemap: "https://horizonsvc.com/sitemap.xml"
+    sitemap: `${base}/sitemap.xml`
   };
 }
