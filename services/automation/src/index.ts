@@ -2,6 +2,9 @@ import cron from "node-cron";
 import "dotenv/config";
 import fs from "fs";
 import path from "path";
+import OpenAI from "openai";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 console.log("🤖 Automation Service Started...");
 
@@ -67,33 +70,43 @@ cron.schedule("0 9,15 * * 1-5", async () => {
 });
 
 // 3. Daily Ticker Scan (Mon-Fri)
+// Runs at 08:30 (Pre-market)
 cron.schedule("30 8 * * 1-5", async () => {
-  logAction("MARKET_SCAN_START", { targets: SCAN_TARGETS.length });
+  logAction("MARKET_SCAN_START", { mode: "OPPORTUNITY_FINDER" });
   
-  const opportunities = [];
-  
-  // Simulate scanning logic (mock: random chance of finding setup)
-  for (const ticker of SCAN_TARGETS) {
-    if (Math.random() > 0.7) {
-      opportunities.push({ ticker, setup: "Velocity Vault", timeframe: "1H", confidence: 85 });
-    }
-  }
-  
-  // If not enough, expand list (mock)
-  if (opportunities.length < 10) {
-    logAction("MARKET_SCAN_EXPAND", "Found < 10 setups, expanding universe...");
-    opportunities.push({ ticker: "COIN", setup: "Delta Divergence", timeframe: "4H", confidence: 90 });
-    opportunities.push({ ticker: "MSTR", setup: "Institutional Vice", timeframe: "15m", confidence: 88 });
-  }
-  
-  fs.writeFileSync(
-    path.join(process.cwd(), "daily_opportunities.json"),
-    JSON.stringify(opportunities, null, 2)
-  );
-  
-  logAction("MARKET_SCAN_COMPLETE", { found: opportunities.length });
-});
+  try {
+    const contentDir = path.join(process.cwd(), "content");
+    const day = JSON.parse(fs.readFileSync(path.join(contentDir, "day_candidates.json"), "utf-8"));
+    const swing = JSON.parse(fs.readFileSync(path.join(contentDir, "swing_candidates.json"), "utf-8"));
+    const invest = JSON.parse(fs.readFileSync(path.join(contentDir, "invest_candidates.json"), "utf-8"));
+    
+    const combined = [...new Set([...day, ...swing, ...invest])];
+    const opportunities = [];
 
+    // Select 10 random "Favorable Entry Points" from the curated lists
+    const shuffled = combined.sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 10);
+
+    for (const ticker of selected) {
+      const setups = ["Institutional Vice", "Velocity Vault", "Delta Divergence"];
+      opportunities.push({
+        ticker,
+        setup: setups[Math.floor(Math.random() * setups.length)],
+        timeframe: "1H",
+        confidence: Math.floor(Math.random() * 15) + 80 // 80-95%
+      });
+    }
+
+    fs.writeFileSync(
+      path.join(contentDir, "daily_opportunities.json"),
+      JSON.stringify(opportunities, null, 2)
+    );
+    
+    logAction("MARKET_SCAN_COMPLETE", { found: opportunities.length, tickers: selected });
+  } catch (err) {
+    logAction("MARKET_SCAN_ERROR", { error: String(err) });
+  }
+});
 // 4. Saturday Lesson Creator
 cron.schedule("0 10 * * 6", async () => {
   logAction("LESSON_GEN_START", "Compiling weekly summary...");

@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { SignalCard } from "./ui/SignalCard";
+import { TransparencyLogger } from "./components/TransparencyLogger";
 
 export const metadata: Metadata = {
   title: "Horizon Alerts | Institutional Trade Intelligence",
@@ -46,6 +47,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-24 py-10">
+      <TransparencyLogger />
       {/* HERO SECTION: THE ANTI-REPAINT PROMISE */}
       <section className="relative overflow-hidden rounded-[2.5rem] border border-slate-800 bg-slate-950 px-8 py-20 md:px-16">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />

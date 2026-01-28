@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = "https://horizonsvc.com";
+  const base = process.env.PUBLIC_SITE_URL || "https://horizonsvc.com";
   const routes = [
     "",
     "/pricing",
