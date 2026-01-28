@@ -1,8 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSearchParams } from "next/navigation";
-import { Check, ChevronRight, BarChart3, Zap, ShieldAlert, CreditCard, Lock, Mail } from "lucide-react";
+import { Check, ChevronRight, BarChart3, Zap, ShieldAlert, CreditCard, Lock, Mail, User, MapPin, Calendar, Loader2 } from "lucide-react";
+import { useSignup } from "../hooks/useSignup";
 
 // Types
 interface Option {
@@ -49,37 +50,34 @@ export function OnboardingWizard() {
   
   const [step, setStep] = useState(0);
   const [selections, setSelections] = useState<Record<string, string>>({});
-  const [isProcessing, setIsProcessing] = useState(false);
   
-  // Steps: Quiz (0-2) -> Auth (3) -> Payment (4, if pro)
-  const totalSteps = plan === "pro" ? 5 : 4;
+  // Auth Form State
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    age: "",
+    zipCode: "",
+    email: "",
+    password: ""
+  });
+
+  const { signup, loading, error } = useSignup();
 
   const handleQuizSelect = (optionId: string) => {
     setSelections({ ...selections, [quizSteps[step].id]: optionId });
     setTimeout(() => setStep(step + 1), 200);
   };
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-    // Simulate Auth
-    setTimeout(() => {
-      setIsProcessing(false);
-      if (plan === "pro") {
-        setStep(4); // Go to payment
-      } else {
-        window.location.href = "/dashboard";
-      }
-    }, 1000);
+  const handleAuthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handlePaymentSubmit = (e: React.FormEvent) => {
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsProcessing(true);
-    // Simulate Stripe Processing
-    setTimeout(() => {
-      window.location.href = "/dashboard";
-    }, 2000);
+    await signup({
+      ...formData,
+      preferences: { ...selections, plan }
+    });
   };
 
   // Render Logic
@@ -109,70 +107,63 @@ export function OnboardingWizard() {
       );
     }
 
-    // 2. Auth Step
+    // 2. Auth Step (Final)
     if (step === 3) {
       return (
         <form onSubmit={handleAuthSubmit} className="space-y-6 relative z-10">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold uppercase text-slate-500">First Name</label>
+              <div className="relative mt-2">
+                <User className="absolute left-4 top-3.5 text-slate-500" size={18} />
+                <input required name="firstName" value={formData.firstName} onChange={handleAuthChange} type="text" className="w-full rounded-xl bg-black/40 border border-white/10 pl-12 pr-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="John" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase text-slate-500">Last Name</label>
+              <input required name="lastName" value={formData.lastName} onChange={handleAuthChange} type="text" className="mt-2 w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="Doe" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold uppercase text-slate-500">Age</label>
+              <div className="relative mt-2">
+                <Calendar className="absolute left-4 top-3.5 text-slate-500" size={18} />
+                <input required name="age" value={formData.age} onChange={handleAuthChange} type="number" className="w-full rounded-xl bg-black/40 border border-white/10 pl-12 pr-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="25" />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase text-slate-500">Zip Code</label>
+              <div className="relative mt-2">
+                <MapPin className="absolute left-4 top-3.5 text-slate-500" size={18} />
+                <input required name="zipCode" value={formData.zipCode} onChange={handleAuthChange} type="text" className="w-full rounded-xl bg-black/40 border border-white/10 pl-12 pr-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="10001" />
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-4">
             <div>
               <label className="text-xs font-bold uppercase text-slate-500">Email Address</label>
               <div className="relative mt-2">
                 <Mail className="absolute left-4 top-3.5 text-slate-500" size={18} />
-                <input required type="email" className="w-full rounded-xl bg-black/40 border border-white/10 pl-12 pr-4 py-3 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500" placeholder="trader@example.com" />
+                <input required name="email" value={formData.email} onChange={handleAuthChange} type="email" className="w-full rounded-xl bg-black/40 border border-white/10 pl-12 pr-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="trader@example.com" />
               </div>
             </div>
             <div>
               <label className="text-xs font-bold uppercase text-slate-500">Password</label>
               <div className="relative mt-2">
                 <Lock className="absolute left-4 top-3.5 text-slate-500" size={18} />
-                <input required type="password" className="w-full rounded-xl bg-black/40 border border-white/10 pl-12 pr-4 py-3 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500" placeholder="••••••••" />
+                <input required name="password" value={formData.password} onChange={handleAuthChange} type="password" className="w-full rounded-xl bg-black/40 border border-white/10 pl-12 pr-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="••••••••" />
               </div>
             </div>
           </div>
-          <button disabled={isProcessing} className="w-full btn-primary py-4 text-lg shadow-xl shadow-cyan-500/20">
-            {isProcessing ? "Creating Account..." : "Create Account"}
+
+          {error && <div className="text-red-400 text-sm text-center">{error}</div>}
+
+          <button disabled={loading} className="w-full btn-primary py-4 text-lg shadow-xl shadow-cyan-500/20 flex items-center justify-center gap-2">
+            {loading ? <Loader2 className="animate-spin" /> : "Create Account & Start"}
           </button>
-        </form>
-      );
-    }
-
-    // 3. Payment Step (Pro Only)
-    if (step === 4) {
-      return (
-        <form onSubmit={handlePaymentSubmit} className="space-y-6 relative z-10">
-          <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-4 mb-6">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-cyan-200">Horizon Pro Subscription</span>
-              <span className="font-bold text-white">$49.00 / mo</span>
-            </div>
-          </div>
-
-          {/* Visual Mock of Stripe Elements */}
-          <div className="space-y-4">
-            <div>
-              <label className="text-xs font-bold uppercase text-slate-500">Card Information</label>
-              <div className="relative mt-2 rounded-xl border border-white/10 bg-black/40 p-3 flex items-center gap-3">
-                <CreditCard className="text-slate-400" size={20} />
-                <input required type="text" className="bg-transparent text-white focus:outline-none flex-1 placeholder:text-slate-600" placeholder="4242 4242 4242 4242" />
-                <div className="flex gap-2">
-                  <input required type="text" className="w-16 bg-transparent text-white focus:outline-none placeholder:text-slate-600 text-center" placeholder="MM/YY" />
-                  <input required type="text" className="w-12 bg-transparent text-white focus:outline-none placeholder:text-slate-600 text-center" placeholder="CVC" />
-                </div>
-              </div>
-            </div>
-            <div>
-              <label className="text-xs font-bold uppercase text-slate-500">Name on Card</label>
-              <input required type="text" className="mt-2 w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-white focus:border-cyan-500 focus:outline-none" placeholder="Full Name" />
-            </div>
-          </div>
-
-          <button disabled={isProcessing} className="w-full btn-primary py-4 text-lg shadow-xl shadow-cyan-500/20">
-            {isProcessing ? "Processing Payment..." : "Pay $49.00 & Start"}
-          </button>
-          
-          <p className="text-center text-xs text-slate-500 flex items-center justify-center gap-2">
-            <Lock size={12} /> Secure 256-bit SSL Encrypted Payment
-          </p>
         </form>
       );
     }
@@ -180,26 +171,28 @@ export function OnboardingWizard() {
 
   const getTitle = () => {
     if (step < 3) return quizSteps[step].question;
-    if (step === 3) return "Create Your Account";
-    if (step === 4) return "Secure Payment";
+    return "Create Your Account";
   };
+
+  const progress = ((step + 1) / 4) * 100;
 
   return (
     <div className="mx-auto max-w-2xl">
       {/* Progress Bar */}
       <div className="mb-12">
         <div className="flex justify-between mb-2">
-          {Array.from({ length: totalSteps }).map((_, i) => (
-            <span key={i} className={`text-[10px] font-bold uppercase tracking-widest ${i <= step ? "text-cyan-400" : "text-slate-600"}`}>
-              {i === 3 ? "Auth" : i === 4 ? "Pay" : `Step ${i + 1}`}
-            </span>
-          ))}
+          <span className="text-[10px] font-bold uppercase tracking-widest text-cyan-400">
+            Step {step + 1} of 4
+          </span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">
+            {step === 3 ? "Final Step" : "Profile Setup"}
+          </span>
         </div>
         <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
           <motion.div 
             className="h-full bg-cyan-500"
             initial={{ width: "0%" }}
-            animate={{ width: `${((step + 1) / totalSteps) * 100}%` }}
+            animate={{ width: `${progress}%` }}
             transition={{ duration: 0.5 }}
           />
         </div>

@@ -5,7 +5,7 @@ import OpenAI from "openai";
 import "dotenv/config";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const ACADEMY_DIR = path.join(process.cwd(), "content/academy");
+const ACADEMY_DIR = path.join(process.cwd(), "../../content/academy");
 
 // Duplicates to REMOVE (Keep the better named one)
 const DELETIONS = [

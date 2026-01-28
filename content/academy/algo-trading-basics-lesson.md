@@ -1,9 +1,9 @@
 ---
-title: "Lesson: Algo Trading Basics"
-difficulty: "Advanced"
-duration: "15 min"
-category: "Quantitative"
-image: "/academy-assets/algo-trading-basics-concept.png"
+title: 'Lesson: Algo Trading Basics'
+difficulty: Beginner
+duration: 15 min
+category: Quantitative
+image: /academy-assets/algo-trading-basics-concept.png
 ---
 
 ## Executive Summary: The "Why" and "What" of Algo Trading

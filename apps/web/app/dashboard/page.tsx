@@ -1,17 +1,50 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Bell, Search, Filter, TrendingUp, Zap } from "lucide-react";
+import { Search, Filter, TrendingUp, Zap, Plus, X, Lock, Settings, LayoutDashboard, List, Trophy, Eye } from "lucide-react";
 import { useAuth } from "../context/auth-context";
 import { getApiBaseUrl } from "../lib/api";
+import { ScanCarousel } from "./components/ScanCarousel";
+import { getSmartReason } from "./utils/reasons";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("feed");
+  const [activeTab, setActiveTab] = useState("scanner");
   const [signals, setSignals] = useState<any[]>([]);
+  const [candidates, setCandidates] = useState<string[]>([]);
+  
+  // Scanner State
+  const [activeFilters, setActiveFilters] = useState<string[]>(["High Volatility"]);
+  const [customFilter, setCustomFilter] = useState("");
+
+  const PRESETS = ["Vol > 1M", "RSI < 30", "Gap Up", "Social Hype", "Inst. Buys"];
+  const PREMIUM_ALGOS = ["Institutional Vice", "Velocity Vault", "Delta Divergence"];
+
+  const toggleFilter = (f: string) => {
+    setActiveFilters(prev => 
+      prev.includes(f) ? prev.filter(i => i !== f) : [...prev, f]
+    );
+  };
+
+  const addCustomFilter = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (customFilter && !activeFilters.includes(customFilter)) {
+      setActiveFilters([...activeFilters, customFilter]);
+      setCustomFilter("");
+    }
+  };
 
   useEffect(() => {
-    if (!user) return;
+    // Fetch Candidates for Carousel
+    fetch(`${getApiBaseUrl()}/public-feed/candidates`)
+      .then(res => res.json())
+      .then(data => {
+        setCandidates([...(data.day || []), ...(data.swing || [])]);
+      })
+      .catch(() => setCandidates(["AAPL", "TSLA", "NVDA", "AMD", "MSFT"]));
 
+    if (!user) return;
+    
+    // Fetch initial signals
     const fetchSignals = async () => {
       try {
         const token = await user.getIdToken();
@@ -28,9 +61,42 @@ export default function DashboardPage() {
     };
 
     fetchSignals();
-    const interval = setInterval(fetchSignals, 5000); // 5s poll for real-time feel
+    const interval = setInterval(fetchSignals, 5000);
     return () => clearInterval(interval);
   }, [user]);
+
+  const handleMatch = (ticker: string) => {
+    setSignals(prev => {
+      // Dedupe
+      const recent = prev.slice(0, 5).map(s => s.symbol);
+      if (recent.includes(ticker)) return prev;
+
+      const basePrice = Math.random() * 100 + 20;
+      const entry = basePrice.toFixed(2);
+      const tp1 = (basePrice * 1.05).toFixed(2);
+      const tp2 = (basePrice * 1.10).toFixed(2);
+      const sl = (basePrice * 0.95).toFixed(2);
+
+      const newSignal = {
+        id: `sim-${Date.now()}`,
+        symbol: ticker,
+        pattern: "AI_MATCH_DETECTED",
+        bar_time: new Date().toISOString(),
+        entry: entry,
+        features: { logic: getSmartReason(ticker, activeFilters) },
+        tp1: tp1, tp2: tp2, sl: sl
+      };
+      return [newSignal, ...prev].slice(0, 50);
+    });
+  };
+
+  const tabs = [
+    { id: "scanner", label: "Scanner", icon: LayoutDashboard },
+    { id: "positions", label: "My Positions", icon: List },
+    { id: "config", label: "Configuration", icon: Settings },
+    { id: "winners", label: "Top Winners", icon: Trophy },
+    { id: "watchlist", label: "Watchlist", icon: Eye },
+  ];
 
   return (
     <div className="min-h-screen bg-slate-950 pt-24 pb-20">
@@ -43,108 +109,201 @@ export default function DashboardPage() {
             <p className="text-sm text-slate-400">Welcome back, Trader. Market is <span className="text-emerald-400">Open</span>.</p>
           </div>
           <div className="flex gap-3">
-            <button className="flex items-center gap-2 rounded-xl bg-white/5 px-4 py-2 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-all">
-              <Search size={16} /> Scan
-            </button>
             <button className="flex items-center gap-2 rounded-xl bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all">
               <Zap size={16} /> Alerts ({signals.length})
             </button>
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-4 mb-8">
-          {[
-            { label: "Daily P&L", val: "+$420.50", color: "text-emerald-400" },
-            { label: "Win Rate", val: "68%", color: "text-blue-400" },
-            { label: "Active Trades", val: "3", color: "text-white" },
-            { label: "Risk Exposure", val: "1.2%", color: "text-orange-400" },
-          ].map((stat, i) => (
-            <div key={i} className="glass-card rounded-xl p-4">
-              <div className="text-xs font-bold uppercase text-slate-500 tracking-wider">{stat.label}</div>
-              <div className={`mt-1 text-2xl font-bold ${stat.color}`}>{stat.val}</div>
-            </div>
+        {/* TAB NAVIGATION */}
+        <div className="mb-8 flex items-center gap-2 overflow-x-auto border-b border-white/5 pb-1 no-scrollbar">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 whitespace-nowrap rounded-t-lg border-b-2 px-6 py-3 text-sm font-medium transition-all ${
+                activeTab === tab.id
+                  ? "border-cyan-500 bg-white/5 text-white"
+                  : "border-transparent text-slate-400 hover:text-white hover:bg-white/5"
+              }`}
+            >
+              <tab.icon size={16} />
+              {tab.label}
+            </button>
           ))}
         </div>
 
-        {/* Main Content Area */}
-        <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+        {/* TAB CONTENT */}
+        <div className="min-h-[400px]">
           
-          {/* Signal Feed */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white">Signal Feed</h2>
-              <button className="text-xs font-medium text-slate-400 hover:text-white flex items-center gap-1">
-                <Filter size={14} /> Filter
-              </button>
-            </div>
+          {/* SCANNER TAB */}
+          {activeTab === "scanner" && (
+            <>
+              {/* Active Filters Display */}
+              <div className="mb-6 flex flex-wrap gap-2">
+                {activeFilters.length > 0 ? (
+                  activeFilters.map(f => (
+                    <span key={f} className="inline-flex items-center gap-1 rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-medium text-indigo-300 border border-indigo-500/30">
+                      {f}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-xs text-slate-500">No active filters. Configure in 'Configuration' tab.</span>
+                )}
+              </div>
 
-            {signals.length === 0 && (
-              <div className="text-center py-10 text-slate-500">Waiting for signals...</div>
-            )}
+              <ScanCarousel candidates={candidates} activeFilters={activeFilters} onMatchFound={handleMatch} />
 
-            {signals.map((signal) => (
-              <div key={signal.id} className="glass-card rounded-2xl p-6 border-l-4 border-l-cyan-500 hover:bg-slate-900/80 transition-all cursor-pointer group">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xl font-bold text-white">{signal.symbol}</span>
-                      <span className="rounded bg-cyan-500/20 px-2 py-0.5 text-xs font-bold text-cyan-400">{signal.pattern}</span>
-                      <span className="text-xs text-slate-500">{new Date(signal.bar_time).toLocaleTimeString()}</span>
-                    </div>
-                    <div className="mt-2 text-sm text-slate-300">
-                      {JSON.stringify(signal.features)}
-                    </div>
+              <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-white">Signal Feed</h2>
+                    <button className="text-xs font-medium text-slate-400 hover:text-white flex items-center gap-1">
+                      <Filter size={14} /> Filter
+                    </button>
                   </div>
-                  <div className="text-right">
-                    <div className="text-lg font-mono font-bold text-emerald-400">{Number(signal.entry).toFixed(2)}</div>
-                    <div className="text-xs text-slate-500">Entry Zone</div>
+
+                  {signals.length === 0 && (
+                    <div className="text-center py-10 text-slate-500">Waiting for signals...</div>
+                  )}
+
+                  {signals.map((signal) => (
+                    <div key={signal.id} className="glass-card rounded-2xl p-6 border-l-4 border-l-cyan-500 hover:bg-slate-900/80 transition-all cursor-pointer group">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xl font-bold text-white">{signal.symbol}</span>
+                            <span className="rounded bg-cyan-500/20 px-2 py-0.5 text-xs font-bold text-cyan-400">{signal.pattern}</span>
+                            <span className="text-xs text-slate-500">{new Date(signal.bar_time).toLocaleTimeString()}</span>
+                          </div>
+                          <div className="mt-2 text-sm text-slate-300">
+                            {JSON.stringify(signal.features).replace(/^{"logic":"|"}$/g, "")}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-lg font-mono font-bold text-emerald-400">
+                            {isNaN(Number(signal.entry)) ? signal.entry : Number(signal.entry).toFixed(2)}
+                          </div>
+                          <div className="text-xs text-slate-500">Entry Zone</div>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex gap-4 border-t border-white/5 pt-4 text-xs font-mono text-slate-400 group-hover:text-slate-300">
+                        <span>TP1: {Number(signal.tp1).toFixed(2)}</span>
+                        <span>TP2: {Number(signal.tp2).toFixed(2)}</span>
+                        <span className="text-red-400/80">SL: {Number(signal.sl).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-6">
+                  <div className="glass-card rounded-2xl p-6">
+                    <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+                      <TrendingUp size={18} className="text-emerald-400" /> Market Pulse
+                    </h3>
+                    <div className="space-y-3">
+                      {["SPY Bullish > 505", "VIX Crushing < 13", "BTC Reclaiming 68k"].map((item, i) => (
+                        <div key={i} className="flex items-center gap-2 text-sm text-slate-300">
+                          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          {item}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <div className="mt-4 flex gap-4 border-t border-white/5 pt-4 text-xs font-mono text-slate-400 group-hover:text-slate-300">
-                  <span>TP1: {Number(signal.tp1).toFixed(2)}</span>
-                  <span>TP2: {Number(signal.tp2).toFixed(2)}</span>
-                  <span className="text-red-400/80">SL: {Number(signal.sl).toFixed(2)}</span>
+              </div>
+            </>
+          )}
+
+          {/* CONFIGURATION TAB */}
+          {activeTab === "config" && (
+            <div className="max-w-2xl mx-auto space-y-12">
+              <div className="space-y-6">
+                <h2 className="text-xl font-bold text-white">Scanner Parameters</h2>
+                <div className="flex flex-wrap gap-3">
+                  {PRESETS.map(p => (
+                    <button
+                      key={p}
+                      onClick={() => toggleFilter(p)}
+                      className={`rounded-full px-4 py-2 text-sm font-medium transition-all border ${
+                        activeFilters.includes(p) 
+                          ? "bg-cyan-500 text-black border-cyan-500 shadow-[0_0_15px_rgba(34,211,238,0.4)]" 
+                          : "bg-slate-900 text-slate-400 border-white/10 hover:border-white/30 hover:text-white"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+                <form onSubmit={addCustomFilter} className="flex gap-4">
+                  <input 
+                    type="text" 
+                    placeholder="Add custom parameter (e.g. 'Golden Cross')" 
+                    className="flex-1 rounded-xl bg-slate-900 border border-white/10 px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition-all"
+                    value={customFilter}
+                    onChange={e => setCustomFilter(e.target.value)}
+                  />
+                  <button type="submit" className="rounded-xl bg-white/10 px-6 py-3 text-sm font-bold text-white hover:bg-white/20 transition-all">
+                    Add
+                  </button>
+                </form>
+              </div>
+
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    Proprietary Algorithms <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded uppercase font-bold">Premium</span>
+                  </h2>
+                </div>
+                <div className="grid gap-4">
+                  {PREMIUM_ALGOS.map(algo => (
+                    <button
+                      key={algo}
+                      onClick={() => toggleFilter(algo)}
+                      className={`group relative flex items-center justify-between rounded-xl border p-6 text-left transition-all ${
+                        activeFilters.includes(algo)
+                          ? "bg-indigo-600/20 border-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.2)]"
+                          : "bg-slate-900 border-white/10 hover:border-white/20"
+                      }`}
+                    >
+                      <div>
+                        <h3 className={`font-bold ${activeFilters.includes(algo) ? "text-indigo-300" : "text-white"}`}>
+                          {algo}
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-1">Institutional-grade pattern recognition engine.</p>
+                      </div>
+                      <div className={`h-6 w-6 rounded-full border flex items-center justify-center ${
+                        activeFilters.includes(algo) ? "border-indigo-500 bg-indigo-500 text-white" : "border-slate-700 bg-slate-800"
+                      }`}>
+                        {activeFilters.includes(algo) && <Filter size={12} />}
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            <div className="glass-card rounded-2xl p-6">
-              <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                <TrendingUp size={18} className="text-emerald-400" /> Market Pulse
-              </h3>
-              <div className="space-y-3">
-                {["SPY Bullish > 505", "VIX Crushing < 13", "BTC Reclaiming 68k"].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm text-slate-300">
-                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    {item}
-                  </div>
-                ))}
-              </div>
             </div>
+          )}
 
-            <div className="glass-card rounded-2xl p-6">
-              <h3 className="font-bold text-white mb-4">Watchlist</h3>
-              <div className="space-y-3">
-                {[
-                  { sym: "AMD", price: "174.20", chg: "+2.1%" },
-                  { sym: "COIN", price: "245.50", chg: "-0.5%" },
-                  { sym: "TSLA", price: "178.90", chg: "+1.2%" },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between text-sm">
-                    <span className="font-bold text-white">{item.sym}</span>
-                    <div className="text-right">
-                      <div className="text-white">{item.price}</div>
-                      <div className={item.chg.startsWith("+") ? "text-emerald-400" : "text-red-400"}>{item.chg}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {/* PLACEHOLDERS */}
+          {activeTab === "positions" && (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+              <List size={48} className="mb-4 opacity-20" />
+              <p>No active positions connected.</p>
+              <button className="mt-4 text-cyan-400 hover:underline">Connect Brokerage</button>
             </div>
-          </div>
+          )}
+          {activeTab === "winners" && (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+              <Trophy size={48} className="mb-4 opacity-20" />
+              <p>Top Winners leaderboard updates at market close.</p>
+            </div>
+          )}
+          {activeTab === "watchlist" && (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-500">
+              <Eye size={48} className="mb-4 opacity-20" />
+              <p>Your watchlist is empty.</p>
+            </div>
+          )}
 
         </div>
       </div>

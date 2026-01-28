@@ -27,13 +27,30 @@ const categories = [
     };
     
     async function main() {
+    
       console.log("🚀 Seeding Candidates...");
+    
+      console.log("CWD:", process.cwd());
+    
       
-      // Ensure content directory exists
-      const contentDir = path.join(process.cwd(), "content"); 
-      if (!fs.existsSync(contentDir)) fs.mkdirSync(contentDir, { recursive: true });
+    
+      // Force absolute path for Docker volume
+    
+      const contentDir = "/app/content"; 
+    
+      if (!fs.existsSync(contentDir)) {
+    
+        console.log("Creating /app/content...");
+    
+        fs.mkdirSync(contentDir, { recursive: true });
+    
+      }
+    
+    
     
       for (const cat of categories) {
+    
+    
         let tickers = [];
         try {
           console.log(`Generating ${cat.type}...`);
