@@ -29,6 +29,31 @@ function getPost(slug: string) {
   return matter(raw);
 }
 
+import { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const post = getPost(slug);
+  
+  if (!post) {
+    return {
+      title: "Blog Post | Horizon Alerts",
+    };
+  }
+
+  return {
+    title: `${post.data.title} | Horizon Insights`,
+    description: post.data.excerpt || "Institutional market analysis and trading strategies.",
+    openGraph: {
+      title: post.data.title,
+      description: post.data.excerpt,
+      images: post.data.image ? [{ url: post.data.image }] : [],
+      type: "article",
+      publishedTime: post.data.date
+    }
+  };
+}
+
 export default async function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const post = getPost(slug);
