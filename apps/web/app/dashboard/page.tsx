@@ -1,16 +1,20 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Search, Filter, TrendingUp, Zap, Plus, X, Lock, Settings, LayoutDashboard, List, Trophy, Eye } from "lucide-react";
+import { Search, Filter, TrendingUp, Zap, Plus, X, Lock, Settings, LayoutDashboard, List, Trophy, Eye, Maximize2 } from "lucide-react";
 import { useAuth } from "../context/auth-context";
 import { getApiBaseUrl } from "../lib/api";
 import { ScanCarousel } from "./components/ScanCarousel";
 import { getSmartReason } from "./utils/reasons";
+import { TradingChart } from "../components/TradingChart";
+import { MiniChart } from "../components/MiniChart";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("scanner");
   const [signals, setSignals] = useState<any[]>([]);
   const [candidates, setCandidates] = useState<string[]>([]);
+  const [selectedTicker, setSelectedTicker] = useState<string | null>(null);
   
   // Scanner State
   const [activeFilters, setActiveFilters] = useState<string[]>(["High Volatility"]);
@@ -34,7 +38,6 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    // Fetch Candidates for Carousel
     fetch(`${getApiBaseUrl()}/public-feed/candidates`)
       .then(res => res.json())
       .then(data => {
@@ -44,7 +47,6 @@ export default function DashboardPage() {
 
     if (!user) return;
     
-    // Fetch initial signals
     const fetchSignals = async () => {
       try {
         const token = await user.getIdToken();
@@ -66,28 +68,7 @@ export default function DashboardPage() {
   }, [user]);
 
   const handleMatch = (ticker: string) => {
-    setSignals(prev => {
-      // Dedupe
-      const recent = prev.slice(0, 5).map(s => s.symbol);
-      if (recent.includes(ticker)) return prev;
-
-      const basePrice = Math.random() * 100 + 20;
-      const entry = basePrice.toFixed(2);
-      const tp1 = (basePrice * 1.05).toFixed(2);
-      const tp2 = (basePrice * 1.10).toFixed(2);
-      const sl = (basePrice * 0.95).toFixed(2);
-
-      const newSignal = {
-        id: `sim-${Date.now()}`,
-        symbol: ticker,
-        pattern: "AI_MATCH_DETECTED",
-        bar_time: new Date().toISOString(),
-        entry: entry,
-        features: { logic: getSmartReason(ticker, activeFilters) },
-        tp1: tp1, tp2: tp2, sl: sl
-      };
-      return [newSignal, ...prev].slice(0, 50);
-    });
+    console.log(`Scanner highlighted: ${ticker}`);
   };
 
   const tabs = [
@@ -99,10 +80,47 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 pt-24 pb-20">
+    <div className="min-h-screen bg-slate-950 pt-24 pb-20 relative">
       <div className="mx-auto max-w-7xl px-6">
         
-        {/* Header */}
+        {/* CHART MODAL OVERLAY */}
+        <AnimatePresence>
+          {selectedTicker && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 md:p-10"
+              onClick={() => setSelectedTicker(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="relative w-full h-full md:max-w-5xl md:h-[80vh] bg-slate-950 rounded-3xl border border-white/10 shadow-2xl overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-6 py-4 bg-slate-900/50 backdrop-blur-md border-b border-white/5">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl font-bold text-white">{selectedTicker}</span>
+                    <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded">5m / Heikin Ashi / Live</span>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedTicker(null)}
+                    className="p-2 rounded-full bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                
+                <div className="pt-16 w-full h-full">
+                  <TradingChart symbol={selectedTicker} />
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white">Live Dashboard</h1>
@@ -115,7 +133,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* TAB NAVIGATION */}
         <div className="mb-8 flex items-center gap-2 overflow-x-auto border-b border-white/5 pb-1 no-scrollbar">
           {tabs.map((tab) => (
             <button
@@ -133,13 +150,10 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* TAB CONTENT */}
         <div className="min-h-[400px]">
           
-          {/* SCANNER TAB */}
           {activeTab === "scanner" && (
             <>
-              {/* Active Filters Display */}
               <div className="mb-6 flex flex-wrap gap-2">
                 {activeFilters.length > 0 ? (
                   activeFilters.map(f => (
@@ -168,8 +182,15 @@ export default function DashboardPage() {
                   )}
 
                   {signals.map((signal) => (
-                    <div key={signal.id} className="glass-card rounded-2xl p-6 border-l-4 border-l-cyan-500 hover:bg-slate-900/80 transition-all cursor-pointer group">
-                      <div className="flex justify-between items-start">
+                    <div 
+                      key={signal.id} 
+                      onClick={() => setSelectedTicker(signal.symbol)}
+                      className="glass-card rounded-2xl p-6 border-l-4 border-l-cyan-500 hover:bg-slate-900/80 transition-all cursor-pointer group relative overflow-hidden"
+                    >
+                      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <Maximize2 size={16} className="text-slate-400" />
+                      </div>
+                      <div className="flex justify-between items-start mb-4">
                         <div>
                           <div className="flex items-center gap-3">
                             <span className="text-xl font-bold text-white">{signal.symbol}</span>
@@ -187,7 +208,13 @@ export default function DashboardPage() {
                           <div className="text-xs text-slate-500">Entry Zone</div>
                         </div>
                       </div>
-                      <div className="mt-4 flex gap-4 border-t border-white/5 pt-4 text-xs font-mono text-slate-400 group-hover:text-slate-300">
+
+                      {/* Mini Chart Preview */}
+                      <div className="h-24 w-full mb-4 rounded-lg overflow-hidden border border-white/5 bg-slate-900/50 pointer-events-none">
+                        <MiniChart symbol={signal.symbol} />
+                      </div>
+
+                      <div className="flex gap-4 border-t border-white/5 pt-4 text-xs font-mono text-slate-400 group-hover:text-slate-300">
                         <span>TP1: {Number(signal.tp1).toFixed(2)}</span>
                         <span>TP2: {Number(signal.tp2).toFixed(2)}</span>
                         <span className="text-red-400/80">SL: {Number(signal.sl).toFixed(2)}</span>

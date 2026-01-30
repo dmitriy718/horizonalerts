@@ -10,6 +10,31 @@ export async function generateStaticParams() {
   }));
 }
 
+import { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const lesson = getLessonBySlug(slug);
+
+  if (!lesson) {
+    return {
+      title: "Academy Lesson | Horizon Alerts",
+    };
+  }
+
+  const title = lesson.title ? lesson.title.replace("Lesson: ", "") : "Lesson";
+
+  return {
+    title: `${title} | Horizon Academy`,
+    description: `Master ${title} with our institutional-grade trading curriculum. Difficulty: ${lesson.difficulty}.`,
+    openGraph: {
+      title: `${title} - Horizon Academy`,
+      description: `Learn ${title} and apply it to real markets.`,
+      type: "article",
+    }
+  };
+}
+
 export default async function LessonPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const lesson = getLessonBySlug(slug);

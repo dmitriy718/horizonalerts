@@ -1,38 +1,38 @@
-# Horizon Services Trade Alerts
+# Horizon Alerts
 
-Production-grade, cross-platform trade alert ecosystem for iOS, Android, and Web.
-This repo ships deployable code, infra-as-code, and launch-ready content.
+**Institutional Trade Intelligence for Retail Traders.**
 
-## Monorepo layout
-- `apps/web`: Next.js 15 marketing + member web experience.
-- `services/api`: Fastify API gateway, entitlements, public feed, tickets.
-- `services/signal-engine`: non-repainting signal engine skeleton.
-- `infra/terraform`: cloud/VPS infra definitions.
-- `infra/ansible`: VPS hardening and NGINX provisioning.
-- `docs`: architecture, OpenAPI, runbooks, legal templates.
-- `content`: email templates, academy drills, blog seeds.
+Horizon Alerts is a real-time signal platform powered by proprietary algorithms (`Institutional Vice`, `Velocity Vault`, `Delta Divergence`) scanning equities and crypto markets.
 
-## Non-negotiables
-- No trade execution or broker actions.
-- No repainting: closed-bar signals only, immutable records.
-- Email verification required, free/pro entitlements enforced server-side.
-- Persistent disclaimers and recorded acknowledgments.
+## Features
 
-## Quick start (local)
-1. Copy `.env.example` to `.env` and set keys.
-2. Run Docker services:
-   - `docker compose up -d`
-3. Run database migration inside Postgres container:
-   - `docker compose exec postgres psql -U postgres -d horizonalerts -f /db/001_init.sql`
-4. Start API + Web (already running in compose).
+- **Real-Time Scanner:** 5-minute interval scanning using live Alpaca Market Data.
+- **Institutional Algos:** Detects order flow imbalances, hidden absorption, and momentum breakouts.
+- **Pro Dashboard:** "Cyberpunk" terminal interface with interactive scanning, mini-charts, and advanced TradingView integration.
+- **Education:** 20+ deep-dive lessons in the Horizon Academy.
+- **Secure:** Firebase Auth + Custom Backend Sync, Stripe Payments, and SMTP Email Notifications.
 
-Compose mounts the migration at `/db/001_init.sql`.
+## Tech Stack
 
-## Environments
-All secrets must be provided via environment variables or a secret store.
-See `.env.example` for the required keys.
+- **Frontend:** Next.js 15, Tailwind CSS, Framer Motion.
+- **Backend:** Fastify, Node.js, TypeScript.
+- **Database:** PostgreSQL (User data, Signals, Entitlements).
+- **Data Feed:** Alpaca Markets API (`getBarsV2`).
+- **Infrastructure:** Docker Compose, Nginx, VPS (Ubuntu).
 
-## Compliance
-Disclaimers are always visible in product and public pages. User acknowledgments
-are stored server-side in `users` and `settings` documents.
+## Getting Started
 
+1. **Clone:** `git clone ...`
+2. **Env:** Copy `.env.example` to `.env` and populate keys (Alpaca, Stripe, Firebase).
+3. **Run:** `docker compose up -d --build`.
+
+## Architecture
+
+- **`apps/web`**: Next.js frontend.
+- **`services/api`**: Core backend API.
+- **`services/signal-engine`**: Polls Alpaca, runs detectors, writes signals to DB.
+- **`services/automation`**: Daily tasks (OpenAI candidate scanning, Content generation).
+
+## License
+
+Proprietary.
