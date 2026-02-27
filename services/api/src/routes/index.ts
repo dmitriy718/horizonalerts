@@ -8,6 +8,7 @@ import { stripeRoutes } from "./stripe.js";
 import { healthRoutes } from "./health.js";
 import { billingRoutes } from "./billing.js";
 import { authRoutes } from "./auth.js";
+import { botRoutes } from "./bot.js";
 
 export async function registerRoutes(server: FastifyInstance) {
   await server.register(healthRoutes, { prefix: "/health" });
@@ -20,4 +21,5 @@ export async function registerRoutes(server: FastifyInstance) {
   await server.register(stripeRoutes, { prefix: "/auth" }); // /auth/callback/stripe
   await server.register(authRoutes, { prefix: "/auth" }); // /auth/register
   await server.register(billingRoutes, { prefix: "/billing" });
+  await server.register(botRoutes, { prefix: "/bot" });
 }
