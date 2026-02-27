@@ -60,7 +60,7 @@ export default function HomePage() {
               href="/pricing"
               className="group relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 px-10 py-5 text-base font-bold text-white shadow-xl shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40 hover:scale-[1.03]"
             >
-              <span className="relative z-10">Start Your Bot — From $29/mo</span>
+              <span className="relative z-10">Start Your Bot — From $49.99/mo</span>
               <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-1000 group-hover:translate-x-full" />
             </Link>
             <Link
@@ -447,7 +447,7 @@ export default function HomePage() {
             </span>
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-lg text-slate-400">
-            Join thousands of traders who let Nova handle the heavy lifting. Plans start at just $29/mo.
+            Join thousands of traders who let Nova handle the heavy lifting. Plans start at $49.99/mo.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Link
