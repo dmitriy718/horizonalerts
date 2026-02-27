@@ -9,9 +9,9 @@ import { useAuth } from "../context/auth-context";
 function Logo() {
   return (
     <div className="relative flex items-center justify-center">
-      <div className="absolute -inset-3 rounded-full bg-cyan-500/20 blur-xl animate-pulse-slow" />
-      <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20">
-        <span className="font-mono text-xl font-bold text-white">N</span>
+      <div className="absolute -inset-4 rounded-2xl bg-gradient-to-br from-cyan-500/25 to-blue-600/15 blur-xl animate-pulse-slow" />
+      <div className="relative z-10 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 shadow-lg shadow-cyan-500/30 ring-1 ring-white/10">
+        <span className="font-mono text-xl font-black text-white drop-shadow-md">N</span>
       </div>
     </div>
   );
@@ -47,11 +47,13 @@ export function Navbar() {
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
         <Link href="/" className="group relative z-50 flex items-center gap-3">
           <Logo />
-          <div className="hidden flex-col md:flex">
-            <span className="text-lg font-bold tracking-tight text-white group-hover:text-cyan-400 transition-colors">
+          <div className="hidden md:flex items-baseline gap-2">
+            <span className="text-xl font-black tracking-tight bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent group-hover:from-cyan-300 group-hover:to-blue-300 transition-all">
               Nova
             </span>
-            <span className="text-[10px] font-medium uppercase tracking-widest text-slate-500">by Horizon</span>
+            <span className="text-sm font-semibold tracking-wide text-slate-400 group-hover:text-slate-300 transition-colors">
+              by Horizon
+            </span>
           </div>
         </Link>
 
@@ -170,7 +172,7 @@ export function Navbar() {
                       </div>
                       <div>
                         <div className="text-white font-bold">{user.email}</div>
-                        <div className="text-xs text-cyan-400">Nova Member</div>
+                        <div className="text-xs text-cyan-400">Nova by Horizon</div>
                       </div>
                     </div>
                     <button onClick={logOut} className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-center font-bold text-red-400">

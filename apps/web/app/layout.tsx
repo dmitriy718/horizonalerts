@@ -24,15 +24,29 @@ export default function RootLayout({
           <CookieBanner />
           <Navbar />
           <main className="mx-auto min-h-screen pt-20">{children}</main>
-          <footer className="border-t border-white/5 bg-slate-950 py-12 text-sm text-slate-400">
-          <div className="mx-auto max-w-7xl px-6">
-            <div className="grid gap-8 md:grid-cols-4">
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-white">Nova <span className="text-sm font-normal text-slate-500">by Horizon</span></h3>
+          <footer className="relative border-t border-white/5 bg-slate-950 py-16 text-sm text-slate-400 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/[0.02] to-transparent pointer-events-none" />
+          <div className="relative mx-auto max-w-7xl px-6">
+            <div className="grid gap-10 md:grid-cols-4">
+              <div className="space-y-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 shadow-lg shadow-cyan-500/20 ring-1 ring-white/10">
+                    <span className="font-mono text-sm font-black text-white">N</span>
+                  </div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-lg font-black bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Nova</span>
+                    <span className="text-sm font-semibold text-slate-400">by Horizon</span>
+                  </div>
+                </div>
                 <p className="max-w-xs text-xs leading-relaxed text-slate-500">
                   Autonomous AI trading bots for crypto and stocks. Managed hosting or self-hosted.
                   Real performance, real trades, real risk management.
                 </p>
+                <div className="flex gap-3 pt-1">
+                  <div className="rounded-full border border-white/5 bg-white/5 px-3 py-1 text-[10px] font-medium text-slate-500">Kraken</div>
+                  <div className="rounded-full border border-white/5 bg-white/5 px-3 py-1 text-[10px] font-medium text-slate-500">Coinbase</div>
+                  <div className="rounded-full border border-white/5 bg-white/5 px-3 py-1 text-[10px] font-medium text-slate-500">Alpaca</div>
+                </div>
               </div>
               <div>
                 <h4 className="mb-4 font-bold text-white">Platform</h4>
@@ -62,9 +76,9 @@ export default function RootLayout({
                 </ul>
               </div>
             </div>
-            <div className="mt-12 border-t border-white/5 pt-8 text-center text-xs text-slate-600">
+            <div className="mt-14 border-t border-white/5 pt-8 text-center text-xs text-slate-600">
               <DisclaimerBar />
-              <p className="mt-4">&copy; {new Date().getFullYear()} Horizon Services. All rights reserved.</p>
+              <p className="mt-4">&copy; {new Date().getFullYear()} Horizon Services LLC. All rights reserved. <span className="text-slate-700">|</span> Built with precision.</p>
             </div>
           </div>
         </footer>
