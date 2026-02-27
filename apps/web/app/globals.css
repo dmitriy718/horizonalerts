@@ -16,7 +16,7 @@ body {
 /* Background Effects */
 .bg-grid {
   background-size: 60px 60px;
-  background-image: 
+  background-image:
     linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
@@ -73,6 +73,53 @@ body {
 .animate-gradient-x {
   background-size: 200% 200%;
   animation: gradient-x 6s ease infinite;
+}
+
+/* Hero orb animations */
+@keyframes orb-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -40px) scale(1.05); }
+  50% { transform: translate(-20px, 20px) scale(0.95); }
+  75% { transform: translate(15px, 30px) scale(1.02); }
+}
+.animate-orb-1 { animation: orb-drift 20s ease-in-out infinite; }
+.animate-orb-2 { animation: orb-drift 25s ease-in-out infinite reverse; }
+.animate-orb-3 { animation: orb-drift 18s ease-in-out infinite 3s; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.8s ease-out both; }
+.animate-fade-up-1 { animation: fade-up 0.8s ease-out 0.1s both; }
+.animate-fade-up-2 { animation: fade-up 0.8s ease-out 0.2s both; }
+.animate-fade-up-3 { animation: fade-up 0.8s ease-out 0.3s both; }
+.animate-fade-up-4 { animation: fade-up 0.8s ease-out 0.4s both; }
+.animate-fade-up-5 { animation: fade-up 0.8s ease-out 0.5s both; }
+.animate-fade-up-6 { animation: fade-up 0.8s ease-out 0.6s both; }
+
+@keyframes counter-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.animate-counter-pulse {
+  animation: counter-pulse 3s ease-in-out infinite;
+}
+
+@keyframes glow-border {
+  0%, 100% { border-color: rgba(34, 211, 238, 0.2); box-shadow: 0 0 20px rgba(34, 211, 238, 0.05); }
+  50% { border-color: rgba(34, 211, 238, 0.5); box-shadow: 0 0 40px rgba(34, 211, 238, 0.15); }
+}
+.animate-glow-border {
+  animation: glow-border 4s ease-in-out infinite;
+}
+
+@keyframes slide-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-slide-left {
+  animation: slide-left 30s linear infinite;
 }
 
 /* Scrollbar */
