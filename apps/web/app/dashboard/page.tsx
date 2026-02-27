@@ -16,6 +16,11 @@ import {
   RefreshCw,
   Wifi,
   WifiOff,
+  Cloud,
+  Server,
+  HelpCircle,
+  EyeOff,
+  Mail,
   Trophy,
   Flame,
   Star,
@@ -194,6 +199,16 @@ export default function DashboardPage() {
   const [thoughts, setThoughts] = useState<any[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
+  // Inline bot connection state
+  const [setupStep, setSetupStep] = useState(0); // 0=choice, 1=form
+  const [setupHosting, setSetupHosting] = useState<"managed" | "self-hosted">("managed");
+  const [setupUrl, setSetupUrl] = useState("");
+  const [setupKey, setSetupKey] = useState("");
+  const [setupLabel, setSetupLabel] = useState("My Bot");
+  const [setupSaving, setSetupSaving] = useState(false);
+  const [setupError, setSetupError] = useState("");
+  const [showSetupKey, setShowSetupKey] = useState(false);
+
   const apiFetch = useCallback(
     async (path: string) => {
       if (!user) return null;
@@ -214,6 +229,42 @@ export default function DashboardPage() {
       .then((data) => setConnected(data !== null))
       .catch(() => setConnected(false));
   }, [user, apiFetch]);
+
+  const handleInlineConnect = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSetupError("");
+    setSetupSaving(true);
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/bot/connection`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${await user!.getIdToken()}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bot_url: setupUrl.replace(/\/+$/, ""),
+          api_key: setupKey,
+          hosting_type: setupHosting,
+          label: setupLabel || "My Bot",
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        const msg = body.message || body.error || `Error ${res.status}`;
+        if (msg.includes("unreachable") || msg.includes("fetch")) {
+          throw new Error("Could not reach your bot. Check the URL and make sure port 8080 is open.");
+        } else if (msg.includes("401") || msg.includes("403")) {
+          throw new Error("Authentication failed. Double-check your API key.");
+        }
+        throw new Error(msg);
+      }
+      setConnected(true);
+    } catch (err: any) {
+      setSetupError(err.message || "Connection failed");
+    } finally {
+      setSetupSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!user || connected === false || connected === null) return;
@@ -325,37 +376,179 @@ export default function DashboardPage() {
   if (connected === false) {
     return (
       <div className="min-h-screen pt-28 pb-20">
-        <div className="mx-auto max-w-2xl px-6 text-center">
-          <div className="relative rounded-3xl border border-white/10 bg-slate-900/50 p-16 overflow-hidden">
+        <div className="mx-auto max-w-3xl px-6">
+          <div className="relative rounded-3xl border border-white/10 bg-slate-900/50 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/[0.03] to-purple-500/[0.03]" />
-            <div className="relative">
-              <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-800/80 border border-white/10">
-                <WifiOff size={36} className="text-slate-500" />
+
+            <div className="relative p-8 md:p-12">
+              {/* Header */}
+              <div className="text-center mb-10">
+                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-800/80 border border-white/10">
+                  <WifiOff size={36} className="text-slate-500" />
+                </div>
+                <h2 className="text-3xl font-extrabold text-white mb-3">Connect Your Trading Bot</h2>
+                <p className="text-slate-400 max-w-md mx-auto leading-relaxed">
+                  Link your NovaPulse bot to unlock live performance, gamified stats, AI reasoning, and full trade visibility.
+                </p>
               </div>
-              <h2 className="text-3xl font-extrabold text-white mb-3">No Bot Connected</h2>
-              <p className="text-slate-400 mb-4 max-w-md mx-auto leading-relaxed">
-                Connect your NovaPulse trading bot to unlock your personal dashboard with live performance tracking, gamified stats, and full bot control.
-              </p>
-              <div className="mb-8 grid grid-cols-3 gap-4 max-w-sm mx-auto">
-                <div className="rounded-xl bg-white/[0.02] border border-white/5 p-3 text-center">
-                  <BarChart3 size={18} className="mx-auto mb-1 text-cyan-400" />
-                  <div className="text-[10px] text-slate-500">Live P&L</div>
-                </div>
-                <div className="rounded-xl bg-white/[0.02] border border-white/5 p-3 text-center">
-                  <Trophy size={18} className="mx-auto mb-1 text-amber-400" />
-                  <div className="text-[10px] text-slate-500">Achievements</div>
-                </div>
-                <div className="rounded-xl bg-white/[0.02] border border-white/5 p-3 text-center">
-                  <Brain size={18} className="mx-auto mb-1 text-purple-400" />
-                  <div className="text-[10px] text-slate-500">AI Feed</div>
-                </div>
+
+              {/* Feature preview */}
+              <div className="mb-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {[
+                  { icon: BarChart3, label: "Live P&L Tracking", color: "text-emerald-400" },
+                  { icon: Trophy, label: "Rank & Achievements", color: "text-amber-400" },
+                  { icon: Brain, label: "AI Reasoning Feed", color: "text-purple-400" },
+                  { icon: Activity, label: "Open Positions", color: "text-cyan-400" },
+                ].map((f) => (
+                  <div key={f.label} className="rounded-xl bg-white/[0.02] border border-white/5 p-3 text-center">
+                    <f.icon size={18} className={`mx-auto mb-1.5 ${f.color}`} />
+                    <div className="text-[10px] font-semibold text-slate-500">{f.label}</div>
+                  </div>
+                ))}
               </div>
-              <Link
-                href="/settings"
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-8 py-4 text-sm font-bold text-white shadow-lg shadow-cyan-500/20 transition-all hover:shadow-cyan-500/40 hover:scale-[1.02]"
-              >
-                <Settings size={16} /> Connect Your Bot
-              </Link>
+
+              {/* Inline Setup Wizard */}
+              {setupStep === 0 ? (
+                <div className="space-y-5">
+                  <div className="text-center text-sm font-bold text-white">How is your bot hosted?</div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <button
+                      onClick={() => { setSetupHosting("managed"); setSetupStep(1); setSetupError(""); }}
+                      className="group rounded-2xl border border-cyan-500/20 bg-cyan-500/[0.03] p-5 text-left transition-all hover:border-cyan-500/40 hover:bg-cyan-500/[0.06]"
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/10">
+                          <Cloud size={20} className="text-cyan-400" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-white">Hosted by Horizon</div>
+                          <span className="rounded-full bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 text-[9px] font-bold text-cyan-400">RECOMMENDED</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        We emailed your bot URL and API key when you subscribed.
+                      </p>
+                      <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-cyan-400 group-hover:gap-2 transition-all">
+                        Select <ChevronRight size={12} />
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => { setSetupHosting("self-hosted"); setSetupStep(1); setSetupError(""); }}
+                      className="group rounded-2xl border border-white/10 bg-white/[0.02] p-5 text-left transition-all hover:border-white/20 hover:bg-white/[0.04]"
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5">
+                          <Server size={20} className="text-slate-400" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-white">Self-Hosted</div>
+                          <span className="rounded-full bg-white/5 border border-white/10 px-2 py-0.5 text-[9px] font-bold text-slate-500">ADVANCED</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        You run NovaPulse on your own server or VPS.
+                      </p>
+                      <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-slate-400 group-hover:text-white group-hover:gap-2 transition-all">
+                        Select <ChevronRight size={12} />
+                      </div>
+                    </button>
+                  </div>
+
+                  <div className="text-center">
+                    <Link href="/settings" className="text-xs text-slate-500 hover:text-cyan-400 transition-colors">
+                      or set up in Settings with detailed instructions &rarr;
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  <div className="flex items-center gap-3 mb-2">
+                    <button onClick={() => { setSetupStep(0); setSetupError(""); }} className="text-xs text-slate-500 hover:text-white transition-colors">&larr; Back</button>
+                    <div className="text-sm font-bold text-white">
+                      {setupHosting === "managed" ? "Enter Your Horizon Credentials" : "Enter Your Bot Details"}
+                    </div>
+                  </div>
+
+                  {/* Contextual help */}
+                  <div className={`rounded-xl border p-4 ${setupHosting === "managed" ? "border-cyan-500/10 bg-cyan-500/[0.02]" : "border-white/5 bg-slate-900/30"}`}>
+                    {setupHosting === "managed" ? (
+                      <div className="text-xs text-slate-400 leading-relaxed">
+                        <div className="font-bold text-cyan-400 mb-1 flex items-center gap-1.5"><Mail size={12} /> Check your email</div>
+                        We sent your <strong className="text-slate-300">Bot URL</strong> (like <code className="bg-slate-800 px-1.5 py-0.5 rounded text-cyan-400 text-[11px]">http://165.x.x.x:8080</code>) and <strong className="text-slate-300">API Key</strong> (64-char string) when you subscribed.
+                        Can&apos;t find it? Check spam or email <a href="mailto:support@horizonsvc.com" className="text-cyan-400 hover:underline">support@horizonsvc.com</a>.
+                      </div>
+                    ) : (
+                      <div className="text-xs text-slate-400 leading-relaxed">
+                        <div className="font-bold text-slate-300 mb-1 flex items-center gap-1.5"><Server size={12} /> Self-Hosted Setup</div>
+                        Enter your server&apos;s IP + port 8080, and the API key from your bot&apos;s <code className="bg-slate-800 px-1.5 py-0.5 rounded text-cyan-400 text-[11px]">.secrets/env</code> file or dashboard settings. Make sure port 8080 is open.
+                      </div>
+                    )}
+                  </div>
+
+                  {setupError && (
+                    <div className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-400">
+                      <WifiOff size={16} className="shrink-0 mt-0.5" />
+                      <span>{setupError}</span>
+                    </div>
+                  )}
+
+                  <form onSubmit={handleInlineConnect} className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase text-slate-500">Bot URL <span className="text-red-400">*</span></label>
+                        <input
+                          type="url"
+                          required
+                          value={setupUrl}
+                          onChange={(e) => setSetupUrl(e.target.value)}
+                          placeholder={setupHosting === "managed" ? "http://165.245.143.68:8080" : "http://your-ip:8080"}
+                          className="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none font-mono text-sm"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold uppercase text-slate-500">API Key <span className="text-red-400">*</span></label>
+                        <div className="relative">
+                          <input
+                            type={showSetupKey ? "text" : "password"}
+                            required
+                            value={setupKey}
+                            onChange={(e) => setSetupKey(e.target.value)}
+                            placeholder="Paste your API key"
+                            className="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 pr-10 text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none font-mono text-sm"
+                          />
+                          <button type="button" onClick={() => setShowSetupKey(!showSetupKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+                            {showSetupKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 pt-1">
+                      <button
+                        type="submit"
+                        disabled={setupSaving}
+                        className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all disabled:opacity-50"
+                      >
+                        {setupSaving ? (
+                          <><RefreshCw size={16} className="animate-spin" /> Testing Connection...</>
+                        ) : (
+                          <><Wifi size={16} /> Test &amp; Connect</>
+                        )}
+                      </button>
+                      <button type="button" onClick={() => { setSetupStep(0); setSetupError(""); }} className="text-sm text-slate-500 hover:text-white transition-colors">
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+
+                  <div className="text-center pt-2">
+                    <Link href="/settings" className="text-xs text-slate-500 hover:text-cyan-400 transition-colors">
+                      Need more help? Go to Settings for detailed instructions &rarr;
+                    </Link>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
