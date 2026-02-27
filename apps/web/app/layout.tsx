@@ -7,8 +7,8 @@ import { CookieBanner } from "./components/CookieBanner";
 import { AuthProvider } from "./context/auth-context";
 
 export const metadata = {
-  title: "Horizon Alerts | Institutional Trade Intelligence",
-  description: "Members-only, non-execution trade alerts for US, Canada, and optional crypto."
+  title: "Nova by Horizon | Autonomous AI Trading Bots",
+  description: "Fully autonomous crypto and stock trading bots powered by AI confluence engines. Managed hosting or self-hosted."
 };
 
 export default function RootLayout({
@@ -28,18 +28,19 @@ export default function RootLayout({
           <div className="mx-auto max-w-7xl px-6">
             <div className="grid gap-8 md:grid-cols-4">
               <div className="space-y-4">
-                <h3 className="text-lg font-bold text-white">Horizon</h3>
+                <h3 className="text-lg font-bold text-white">Nova <span className="text-sm font-normal text-slate-500">by Horizon</span></h3>
                 <p className="max-w-xs text-xs leading-relaxed text-slate-500">
-                  Institutional-grade signal intelligence for the modern retail trader.
-                  Strict non-repainting policy.
+                  Autonomous AI trading bots for crypto and stocks. Managed hosting or self-hosted.
+                  Real performance, real trades, real risk management.
                 </p>
               </div>
               <div>
                 <h4 className="mb-4 font-bold text-white">Platform</h4>
                 <ul className="space-y-2 text-xs">
                   <li><Link href="/pricing" className="hover:text-cyan-400">Pricing</Link></li>
-                  <li><Link href="/login" className="hover:text-cyan-400">Login</Link></li>
+                  <li><Link href="/dashboard" className="hover:text-cyan-400">Dashboard</Link></li>
                   <li><Link href="/settings" className="hover:text-cyan-400">Settings</Link></li>
+                  <li><Link href="/login" className="hover:text-cyan-400">Login</Link></li>
                 </ul>
               </div>
               <div>

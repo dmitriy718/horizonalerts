@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Menu, X, ChevronRight, User, LogOut, Settings, Sparkles } from "lucide-react";
+import { Menu, X, ChevronRight, LogOut, Settings, LayoutDashboard } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/auth-context";
 
@@ -11,7 +11,7 @@ function Logo() {
     <div className="relative flex items-center justify-center">
       <div className="absolute -inset-3 rounded-full bg-cyan-500/20 blur-xl animate-pulse-slow" />
       <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20">
-        <span className="font-mono text-xl font-bold text-white">H</span>
+        <span className="font-mono text-xl font-bold text-white">N</span>
       </div>
     </div>
   );
@@ -33,9 +33,9 @@ export function Navbar() {
 
   const navLinks = [
     { name: "Pricing", href: "/pricing" },
+    { name: "Dashboard", href: "/dashboard" },
     { name: "Academy", href: "/academy" },
     { name: "Blog", href: "/blog" },
-    { name: "Scanner", href: "/dashboard" }, // Promoted
   ];
 
   return (
@@ -49,8 +49,9 @@ export function Navbar() {
           <Logo />
           <div className="hidden flex-col md:flex">
             <span className="text-lg font-bold tracking-tight text-white group-hover:text-cyan-400 transition-colors">
-              Horizon Alerts
+              Nova
             </span>
+            <span className="text-[10px] font-medium uppercase tracking-widest text-slate-500">by Horizon</span>
           </div>
         </Link>
 
@@ -61,8 +62,8 @@ export function Navbar() {
               key={link.name}
               href={link.href}
               className={`rounded-full px-5 py-2 text-sm font-medium transition-all ${
-                pathname === link.href 
-                  ? "bg-white/10 text-white shadow-inner" 
+                pathname === link.href
+                  ? "bg-white/10 text-white shadow-inner"
                   : "text-slate-400 hover:text-white hover:bg-white/5"
               }`}
             >
@@ -85,7 +86,7 @@ export function Navbar() {
                   <div className="text-xs font-bold text-white leading-none">{user.email?.split('@')[0]}</div>
                 </div>
               </button>
-              
+
               {/* Dropdown */}
               <div className="absolute right-0 top-full mt-2 w-56 origin-top-right scale-95 opacity-0 transition-all group-hover:scale-100 group-hover:opacity-100 invisible group-hover:visible pt-2">
                 <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950 shadow-2xl shadow-black/50 ring-1 ring-white/5">
@@ -94,11 +95,11 @@ export function Navbar() {
                     <p className="truncate text-sm font-bold text-white">{user.email}</p>
                   </div>
                   <div className="p-1">
+                    <Link href="/dashboard" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white">
+                      <LayoutDashboard size={16} /> Dashboard
+                    </Link>
                     <Link href="/settings" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white">
                       <Settings size={16} /> Settings
-                    </Link>
-                    <Link href="/dashboard" className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-300 hover:bg-white/5 hover:text-white">
-                      <Sparkles size={16} /> Premium
                     </Link>
                   </div>
                   <div className="border-t border-white/5 p-1">
@@ -116,10 +117,9 @@ export function Navbar() {
               </Link>
               <Link
                 href="/pricing"
-                className="group relative overflow-hidden rounded-xl bg-white px-6 py-2.5 text-sm font-bold text-black transition-all hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-105"
+                className="group relative overflow-hidden rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-2.5 text-sm font-bold text-white transition-all hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:scale-105"
               >
-                <span className="relative z-10">Get Access</span>
-                <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white to-transparent opacity-50 transition-transform duration-1000 group-hover:animate-shimmer" />
+                Get Your Bot
               </Link>
             </>
           )}
@@ -160,7 +160,7 @@ export function Navbar() {
                   </Link>
                 </motion.div>
               ))}
-              
+
               <div className="mt-8 flex flex-col gap-4">
                 {user ? (
                   <>
@@ -170,7 +170,7 @@ export function Navbar() {
                       </div>
                       <div>
                         <div className="text-white font-bold">{user.email}</div>
-                        <div className="text-xs text-emerald-400">Premium Member</div>
+                        <div className="text-xs text-cyan-400">Nova Member</div>
                       </div>
                     </div>
                     <button onClick={logOut} className="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-center font-bold text-red-400">
@@ -179,8 +179,8 @@ export function Navbar() {
                   </>
                 ) : (
                   <>
-                    <Link href="/pricing" className="rounded-xl bg-white p-4 text-center font-bold text-black shadow-lg shadow-white/10">
-                      Start Membership
+                    <Link href="/pricing" className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 p-4 text-center font-bold text-white shadow-lg shadow-cyan-500/20">
+                      Get Your Bot
                     </Link>
                     <Link href="/login" className="rounded-xl border border-white/10 bg-white/5 p-4 text-center font-bold text-white">
                       Member Login
