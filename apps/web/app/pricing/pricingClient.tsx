@@ -246,8 +246,8 @@ export function PricingClient() {
   return (
     <>
       {/* ═══════════════ HERO ═══════════════ */}
-      <div className="relative text-center">
-        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-cyan-500/[0.05] blur-[120px] pointer-events-none" />
+      <div className="relative isolate text-center overflow-hidden">
+        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 h-[500px] w-[800px] rounded-full bg-cyan-500/[0.05] blur-[120px] pointer-events-none -z-10" />
         <div className="relative">
           <div className="mb-4 inline-flex rounded-full border border-cyan-500/20 bg-cyan-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-cyan-400">
             Simple, Transparent Pricing
