@@ -1,203 +1,213 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { SignalCard } from "./ui/SignalCard";
-import { TransparencyLogger } from "./components/TransparencyLogger";
 
 export const metadata: Metadata = {
-  title: "Horizon Alerts | Institutional Trade Intelligence",
-  description: "Non-repainting, audit-ready trade signals powered by proprietary order flow algorithms. Real-time alerts for serious traders.",
+  title: "Nova by Horizon | Autonomous AI Trading Bots",
+  description: "Fully autonomous crypto and stock trading bots powered by AI confluence engines. Managed hosting or self-hosted. Real performance, real trades.",
   openGraph: {
-    title: "Horizon Alerts | Institutional Trade Intelligence",
-    description: "The gold standard of pattern recognition with zero repainting.",
+    title: "Nova by Horizon | Autonomous AI Trading Bots",
+    description: "AI-powered trading bots that execute 24/7 with institutional-grade risk management.",
     type: "website",
   }
 };
 
-type PublicSignal = {
-  id: string;
-  symbol: string;
-  venue: string;
-  asset_type: string;
-  pattern: string;
-  entry: number;
-  sl: number;
-  tp1: number | null;
-  tp2: number | null;
-  tp3: number | null;
-  confidence: number;
-  bar_time: string;
-  published_at: string;
-  interval: string;
-};
-
-async function fetchPublicFeed() {
-  const base = process.env.PUBLIC_API_BASE || "http://localhost:4000";
-  try {
-    const res = await fetch(`${base}/public-feed`, { next: { revalidate: 60 } });
-    if (!res.ok) return { data: [] as PublicSignal[] };
-    return res.json();
-  } catch {
-    return { data: [] as PublicSignal[] };
-  }
-}
-
-export default async function HomePage() {
-  const feed = await fetchPublicFeed();
-  const data = (feed?.data || []) as PublicSignal[];
-
+export default function HomePage() {
   return (
-    <div className="flex flex-col gap-24 py-10">
-      <TransparencyLogger />
-      {/* HERO SECTION: THE ANTI-REPAINT PROMISE */}
-      <section className="relative overflow-hidden rounded-[2.5rem] border border-slate-800 bg-slate-950 px-8 py-20 md:px-16">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-        <div className="absolute -right-20 -top-20 h-96 w-96 rounded-full bg-indigo-500/20 blur-[100px]" />
-        
-        <div className="relative z-10 grid gap-12 lg:grid-cols-2 lg:items-center">
-          <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1 text-xs font-medium text-indigo-400">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-400 opacity-75"></span>
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-indigo-500"></span>
-              </span>
-              PROPRIETARY ALGORITHMS ACTIVE
-            </div>
-            
-            <h1 className="text-5xl font-bold tracking-tight text-white md:text-7xl">
-              Signals that <span className="text-indigo-500 underline decoration-indigo-500/30 underline-offset-8">never</span> repaint.
-            </h1>
-            
-            <p className="max-w-xl text-lg leading-relaxed text-slate-400">
-              Most "indicators" lie to you. They change history to look perfect. 
-              <strong> Horizon Alerts</strong> uses immutable, closed-bar execution. 
-              Once a signal is printed, it is locked in our audit ledger forever.
-            </p>
+    <div className="flex flex-col gap-0">
+      {/* HERO */}
+      <section className="relative overflow-hidden px-6 py-24 md:py-36">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-500/10 via-transparent to-transparent" />
+        <div className="absolute -right-40 top-20 h-[500px] w-[500px] rounded-full bg-cyan-500/5 blur-[120px]" />
+        <div className="absolute -left-40 bottom-0 h-[400px] w-[400px] rounded-full bg-indigo-500/5 blur-[120px]" />
 
-            <div className="flex flex-wrap gap-4">
-              <Link href="/pricing" className="rounded-xl bg-indigo-600 px-8 py-4 text-sm font-semibold text-white transition-all hover:bg-indigo-500 hover:shadow-[0_0_20px_rgba(79,70,229,0.4)]">
-                Get Institutional Access
-              </Link>
-              <Link href="/academy" className="rounded-xl border border-slate-800 bg-slate-900/50 px-8 py-4 text-sm font-semibold text-white transition-all hover:bg-slate-800">
-                The Methodology
-              </Link>
-            </div>
-
-            <div className="flex items-center gap-6 pt-4 text-xs font-medium uppercase tracking-widest text-slate-500">
-              <span className="flex items-center gap-2">✅ Audit Trail</span>
-              <span className="flex items-center gap-2">✅ Non-Repainting</span>
-              <span className="flex items-center gap-2">✅ Pro-Only Algos</span>
-            </div>
+        <div className="relative z-10 mx-auto max-w-5xl text-center">
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-5 py-1.5 text-xs font-semibold text-cyan-400 uppercase tracking-wider">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500" />
+            </span>
+            Bots Trading Live 24/7
           </div>
 
-          <div className="mt-12 lg:mt-0 lg:block transform transition-transform hover:scale-105 duration-500">
-             <div className="rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl p-2 shadow-2xl shadow-indigo-500/20 ring-1 ring-white/10">
-                <div className="flex items-center justify-between border-b border-white/5 px-4 py-3 bg-white/5 rounded-t-xl">
-                  <div className="flex gap-1.5">
-                    <div className="h-2.5 w-2.5 rounded-full bg-red-500/50" />
-                    <div className="h-2.5 w-2.5 rounded-full bg-amber-500/50" />
-                    <div className="h-2.5 w-2.5 rounded-full bg-emerald-500/50" />
-                  </div>
-                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">Audit_Ledger_v1.04</span>
-                </div>
-                <div className="space-y-2 p-6 font-mono text-xs md:text-sm leading-relaxed">
-                  <div className="flex gap-3">
-                    <span className="text-slate-500">[14:02:11]</span>
-                    <span className="text-emerald-400">SIGNAL_LOCKED:</span>
-                    <span className="text-white">NVDA / INSTITUTIONAL_VICE / ENTRY: 612.40</span>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="text-slate-500">[14:02:11]</span>
-                    <span className="text-blue-400">LOG_IMMUTABLE:</span>
-                    <span className="text-slate-300">SUCCESS {`{ hash: 0x8a... }`}</span>
-                  </div>
-                  <div className="flex gap-3">
-                    <span className="text-slate-500">[14:15:00]</span>
-                    <span className="text-indigo-400">PUBLIC_FEED_DELAYED:</span>
-                    <span className="text-slate-300">PUBLISHED</span>
-                  </div>
-                  <div className="flex gap-3 animate-pulse">
-                    <span className="text-slate-500">_</span>
-                  </div>
-                </div>
-             </div>
+          <h1 className="text-5xl font-bold tracking-tight text-white md:text-7xl leading-[1.1]">
+            Your AI trading bot.
+            <br />
+            <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+              Always on. Always sharp.
+            </span>
+          </h1>
+
+          <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-slate-400">
+            Nova runs autonomous trading bots powered by 12 AI strategies, multi-exchange support,
+            and institutional-grade risk management. We host it for you, or run it yourself.
+          </p>
+
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/pricing"
+              className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-8 py-4 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40 hover:scale-[1.02]"
+            >
+              View Plans
+            </Link>
+            <Link
+              href="/dashboard"
+              className="rounded-xl border border-white/10 bg-white/5 px-8 py-4 text-sm font-semibold text-white transition-all hover:bg-white/10"
+            >
+              Open Dashboard
+            </Link>
+          </div>
+
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-xs font-medium uppercase tracking-widest text-slate-500">
+            <span>Crypto + Stocks</span>
+            <span className="h-1 w-1 rounded-full bg-slate-700" />
+            <span>Kraken &middot; Coinbase &middot; Alpaca</span>
+            <span className="h-1 w-1 rounded-full bg-slate-700" />
+            <span>12 AI Strategies</span>
           </div>
         </div>
       </section>
 
-      {/* LIVE SIGNAL TICKER */}
-      <section className="relative -mx-6 overflow-hidden border-y border-slate-800/50 bg-slate-900/20 py-4">
-        <div className="flex animate-scroll whitespace-nowrap">
-           {Array(4).fill(data).flat().map((signal, idx) => (
-             <div key={idx} className="mx-8 flex items-center gap-4 text-xs font-medium text-slate-400">
-                <span className="font-bold text-white">{signal.symbol}</span>
-                <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] text-indigo-400">{signal.pattern}</span>
-                <span className="text-emerald-500">+{((Math.random() * 5)).toFixed(2)}%</span>
-             </div>
-           ))}
+      {/* LIVE STATS TICKER */}
+      <section className="border-y border-slate-800/50 bg-slate-900/30 py-5">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-10 px-6 text-center">
+          <div>
+            <div className="text-2xl font-bold text-white">24/7</div>
+            <div className="text-xs text-slate-500 uppercase tracking-wider">Uptime</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-emerald-400">12</div>
+            <div className="text-xs text-slate-500 uppercase tracking-wider">AI Strategies</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-white">3</div>
+            <div className="text-xs text-slate-500 uppercase tracking-wider">Exchanges</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-cyan-400">&lt;50ms</div>
+            <div className="text-xs text-slate-500 uppercase tracking-wider">Execution</div>
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-white">100%</div>
+            <div className="text-xs text-slate-500 uppercase tracking-wider">Automated</div>
+          </div>
         </div>
       </section>
 
-      {/* PROPRIETARY ALGORITHMS PREVIEW */}
-      <section className="space-y-12">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-white">The Gold Standard of Detection</h2>
-          <p className="mt-4 text-slate-400">Three proprietary engines built for institutional-grade precision.</p>
-        </div>
+      {/* HOW IT WORKS */}
+      <section className="px-6 py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-white md:text-4xl">How Nova Works</h2>
+            <p className="mt-4 text-slate-400">From signup to live trading in minutes.</p>
+          </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
-          {[
-            {
-              title: "Institutional Vice",
-              desc: "Detects passive absorption where big money traps retail momentum.",
-              tag: "REVERSAL"
-            },
-            {
-              title: "Velocity Vault",
-              desc: "Spots explosive imbalances before the trend expansion occurs.",
-              tag: "BREAKOUT"
-            },
-            {
-              title: "Delta Divergence",
-              desc: "Identifies hidden strength in pullbacks using order-flow skew.",
-              tag: "CONTINUATION"
-            }
-          ].map(algo => (
-            <div key={algo.title} className="group relative rounded-3xl border border-slate-800 bg-slate-900/30 p-8 transition-all hover:border-indigo-500/50 hover:bg-slate-900/50">
-              <div className="mb-4 inline-block rounded-lg bg-indigo-500/10 px-3 py-1 text-[10px] font-bold text-indigo-400 uppercase">
-                {algo.tag}
+          <div className="mt-16 grid gap-8 md:grid-cols-3">
+            {[
+              {
+                step: "01",
+                title: "Pick a Plan",
+                desc: "Choose managed hosting (we run everything) or self-hosted (your server, your keys). Connect your exchange API keys in the dashboard."
+              },
+              {
+                step: "02",
+                title: "Bot Goes Live",
+                desc: "Your personal NovaPulse instance starts scanning markets 24/7 using 12 AI strategies with multi-timeframe confluence and adaptive risk management."
+              },
+              {
+                step: "03",
+                title: "Monitor & Earn",
+                desc: "Watch live performance, open positions, trade history, and AI reasoning in your dashboard. Adjust settings anytime."
+              }
+            ].map((item) => (
+              <div key={item.step} className="relative rounded-2xl border border-white/5 bg-slate-900/30 p-8">
+                <div className="mb-4 text-4xl font-black text-cyan-500/20">{item.step}</div>
+                <h3 className="text-xl font-bold text-white">{item.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-slate-400">{item.desc}</p>
               </div>
-              <h3 className="text-xl font-bold text-white">{algo.title}</h3>
-              <p className="mt-4 text-sm leading-relaxed text-slate-400">{algo.desc}</p>
-              <div className="mt-6 flex items-center gap-2 text-xs font-semibold text-indigo-400">
-                PRO FEATURE <span className="h-1 w-1 rounded-full bg-indigo-400" /> VIEW AUDIT
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* RECENT ALERTS FEED */}
-      <section className="space-y-8">
-        <div className="flex items-end justify-between">
-          <div className="space-y-1">
-            <h2 className="text-2xl font-bold text-white">Public Feed</h2>
-            <p className="text-sm text-slate-500">Delayed 15 minutes for compliance.</p>
+      {/* FEATURES */}
+      <section className="border-y border-white/5 bg-slate-900/20 px-6 py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-white md:text-4xl">Built for Serious Traders</h2>
+            <p className="mt-4 text-slate-400">Everything you need for autonomous, intelligent trading.</p>
           </div>
-          <Link href="/pricing" className="text-sm font-semibold text-indigo-400 hover:text-indigo-300">
-            Go Real-Time →
-          </Link>
-        </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {data.length === 0 ? (
-            <div className="col-span-full rounded-2xl border border-dashed border-slate-800 py-20 text-center text-slate-500">
-              No public signals in the last session.
+          <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { title: "12 AI Strategies", desc: "Keltner, Mean Reversion, VWAP, Market Structure, Funding Rate, and 7 more — all running in parallel with confluence scoring." },
+              { title: "Multi-Exchange", desc: "Trade on Kraken, Coinbase, and Alpaca (stocks) simultaneously. Each exchange runs its own engine with shared risk management." },
+              { title: "Smart Exit System", desc: "Regime-aware trailing stops, adaptive take-profit tiers, and structural stop-loss placement based on market swing points." },
+              { title: "Real-Time Dashboard", desc: "Live P&L, open positions, trade history, strategy breakdown, risk metrics, and AI thought feed — all in your browser." },
+              { title: "Risk Management", desc: "Per-trade sizing, correlation-based exposure caps, global drawdown limits, and automatic pause on consecutive losses." },
+              { title: "AI Confluence Engine", desc: "Trades only fire when multiple strategies agree. Multi-timeframe analysis, regime detection, and volatility-adjusted confidence." },
+            ].map((feat) => (
+              <div key={feat.title} className="rounded-2xl border border-white/5 bg-slate-900/30 p-6 transition-all hover:border-cyan-500/20 hover:bg-slate-900/50">
+                <h3 className="text-lg font-bold text-white">{feat.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-slate-400">{feat.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SUPPORTED ASSETS */}
+      <section className="px-6 py-24">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="text-3xl font-bold text-white md:text-4xl">Trade Crypto & Stocks</h2>
+          <p className="mt-4 text-slate-400">One bot, multiple markets. The bot automatically manages priority between sessions.</p>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/5 bg-slate-900/30 p-8 text-left">
+              <div className="mb-4 text-sm font-bold uppercase tracking-wider text-cyan-400">Crypto</div>
+              <p className="text-sm text-slate-400">
+                BTC, ETH, SOL, DOGE, ADA, XRP, DOT, AVAX, and more across Kraken and Coinbase.
+                24/7 automated trading with WebSocket live data and sub-second execution.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {["BTC/USD", "ETH/USD", "SOL/USD", "DOGE/USD"].map((pair) => (
+                  <span key={pair} className="rounded-lg bg-cyan-500/10 px-3 py-1 text-xs font-mono font-bold text-cyan-400 border border-cyan-500/20">{pair}</span>
+                ))}
+              </div>
             </div>
-          ) : (
-            data.map(signal => (
-              <SignalCard key={signal.id} signal={signal} />
-            ))
-          )}
+            <div className="rounded-2xl border border-white/5 bg-slate-900/30 p-8 text-left">
+              <div className="mb-4 text-sm font-bold uppercase tracking-wider text-emerald-400">Stocks</div>
+              <p className="text-sm text-slate-400">
+                Dynamic universe of 96 stocks scanned hourly from 8,000+ tickers. Top volume leaders
+                plus pinned blue chips: AAPL, MSFT, NVDA, TSLA. Swing trading via Alpaca.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {["AAPL", "NVDA", "TSLA", "MSFT"].map((ticker) => (
+                  <span key={ticker} className="rounded-lg bg-emerald-500/10 px-3 py-1 text-xs font-mono font-bold text-emerald-400 border border-emerald-500/20">{ticker}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="px-6 py-24">
+        <div className="mx-auto max-w-3xl rounded-3xl border border-cyan-500/20 bg-gradient-to-b from-cyan-500/5 to-transparent p-12 text-center">
+          <h2 className="text-3xl font-bold text-white md:text-4xl">
+            Start trading on autopilot.
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-slate-400">
+            Pick a plan, connect your exchange, and let Nova handle the rest.
+            Your bot starts trading within minutes of signup.
+          </p>
+          <div className="mt-8">
+            <Link
+              href="/pricing"
+              className="inline-block rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 px-10 py-4 text-sm font-bold text-white shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40 hover:scale-[1.02]"
+            >
+              Get Your Bot
+            </Link>
+          </div>
         </div>
       </section>
     </div>
