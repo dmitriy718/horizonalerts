@@ -1,24 +1,37 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../context/auth-context";
-import { sendEmailVerification } from "firebase/auth";
-import { getApiBaseUrl } from "../lib/api";
+import { sendEmailVerification, getAuth } from "firebase/auth";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const router = useRouter();
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
+  // Redirect unauthenticated users
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/login");
+    }
+  }, [user, loading, router]);
+
+  // Email verification polling
   useEffect(() => {
     if (!loading && user && !user.emailVerified) {
       setShowVerificationModal(true);
-      
+
       const interval = setInterval(async () => {
-        await user.reload();
-        if (user.emailVerified) {
-          setShowVerificationModal(false);
-          clearInterval(interval);
-          // Trigger welcome email backend hook here if needed
+        // Use auth.currentUser to get a fresh reference
+        const auth = getAuth();
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          await currentUser.reload();
+          if (currentUser.emailVerified) {
+            setShowVerificationModal(false);
+            clearInterval(interval);
+          }
         }
       }, 3000);
 
@@ -27,13 +40,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [user, loading]);
 
   const handleResend = async () => {
-    if (user) {
-      await sendEmailVerification(user);
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      await sendEmailVerification(currentUser);
       setEmailSent(true);
     }
   };
 
   if (loading) return <div className="min-h-screen pt-24 text-center">Loading Dashboard...</div>;
+  if (!user) return null; // Will redirect via effect above
 
   return (
     <>
@@ -49,9 +65,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <h2 className="text-2xl font-bold text-white mb-2">Verify Your Email</h2>
             <p className="text-slate-300 mb-6">
-              To access institutional signals, we need to verify your identity. Please check your inbox for a link.
+              To access your trading dashboard, we need to verify your identity. Please check your inbox for a link.
             </p>
-            <button 
+            <button
               onClick={handleResend}
               disabled={emailSent}
               className="btn-primary w-full"

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Activity, Users, BarChart2, CheckCircle } from "lucide-react";
 
@@ -12,6 +12,7 @@ interface ScanCarouselProps {
 export function ScanCarousel({ candidates, activeFilters, onMatchFound }: ScanCarouselProps) {
   const [activeScan, setActiveScan] = useState<string | null>(null);
   const [scanStep, setScanStep] = useState(0);
+  const stepIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (candidates.length === 0) return;
@@ -19,6 +20,12 @@ export function ScanCarousel({ candidates, activeFilters, onMatchFound }: ScanCa
     let lastTicker = "";
 
     const interval = setInterval(() => {
+      // Clear any lingering step interval from the previous scan
+      if (stepIntervalRef.current) {
+        clearInterval(stepIntervalRef.current);
+        stepIntervalRef.current = null;
+      }
+
       // Pick a random ticker (avoid immediate repeat)
       let randomTicker = candidates[Math.floor(Math.random() * candidates.length)];
       while (randomTicker === lastTicker && candidates.length > 1) {
@@ -31,23 +38,26 @@ export function ScanCarousel({ candidates, activeFilters, onMatchFound }: ScanCa
 
       // Simulate scan steps (Social -> Volume -> Pattern -> Match/NoMatch)
       let step = 0;
-      const stepInterval = setInterval(() => {
+      stepIntervalRef.current = setInterval(() => {
         step++;
         setScanStep(step);
         if (step >= 4) {
-          clearInterval(stepInterval);
-          // Match chance (boosted if filters are active to simulate "finding" what you want)
+          if (stepIntervalRef.current) clearInterval(stepIntervalRef.current);
+          stepIntervalRef.current = null;
           if (Math.random() > 0.7) {
             onMatchFound(randomTicker);
           }
           setActiveScan(null);
         }
-      }, 150); // Speed: 150ms per step
+      }, 150);
 
-    }, 1200); // Speed: New scan every 1.2s
+    }, 1200);
 
-    return () => clearInterval(interval);
-  }, [candidates, onMatchFound, activeFilters]); // Re-run if filters change (optional, but good for resetting rhythm)
+    return () => {
+      clearInterval(interval);
+      if (stepIntervalRef.current) clearInterval(stepIntervalRef.current);
+    };
+  }, [candidates, onMatchFound, activeFilters]);
 
   return (
     <div className="relative mb-8 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/50 p-6 backdrop-blur-md">

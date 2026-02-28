@@ -1,3 +1,12 @@
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export const styles = `
   body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
   .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
@@ -9,7 +18,9 @@ export const styles = `
   .highlight { color: #4f46e5; font-weight: bold; }
 `;
 
-export const verifyEmailTemplate = (url: string) => `
+export const verifyEmailTemplate = (url: string) => {
+  const safeUrl = escapeHtml(url);
+  return `
 <!DOCTYPE html>
 <html>
 <head><style>${styles}</style></head>
@@ -19,7 +30,7 @@ export const verifyEmailTemplate = (url: string) => `
     <div class="content">
       <h2>Verify your email address</h2>
       <p>Thanks for joining <strong>Horizon Alerts</strong>. To access the institutional dashboard and start receiving real-time order flow signals, please verify your email.</p>
-      <center><a href="${url}" class="btn">Verify Email Access</a></center>
+      <center><a href="${safeUrl}" class="btn">Verify Email Access</a></center>
       <p style="margin-top: 30px; font-size: 13px; color: #666;">If you didn't create an account, you can safely ignore this email.</p>
     </div>
     <div class="footer">&copy; ${new Date().getFullYear()} Horizon Services. Institutional Order Flow.</div>
@@ -27,9 +38,11 @@ export const verifyEmailTemplate = (url: string) => `
 </body>
 </html>
 `;
+};
 
 export const welcomeTemplate = (name: string) => {
   const base = process.env.PUBLIC_SITE_URL || "https://horizonsvc.com";
+  const safeName = escapeHtml(name);
   return `
 <!DOCTYPE html>
 <html>
@@ -38,7 +51,7 @@ export const welcomeTemplate = (name: string) => {
   <div class="container">
     <div class="header"><h1>Access Granted</h1></div>
     <div class="content">
-      <h2>Welcome aboard, ${name}.</h2>
+      <h2>Welcome aboard, ${safeName}.</h2>
       <p>Your email is verified, and your dashboard is unlocked. You now have access to:</p>
       <ul>
         <li>Real-time Institutional Signals</li>
@@ -55,7 +68,10 @@ export const welcomeTemplate = (name: string) => {
 `;
 };
 
-export const contactConfirmationTemplate = (name: string, message: string) => `
+export const contactConfirmationTemplate = (name: string, message: string) => {
+  const safeName = escapeHtml(name);
+  const safeMessage = escapeHtml(message);
+  return `
 <!DOCTYPE html>
 <html>
 <head><style>${styles}</style></head>
@@ -63,11 +79,11 @@ export const contactConfirmationTemplate = (name: string, message: string) => `
   <div class="container">
     <div class="header"><h1>Message Received</h1></div>
     <div class="content">
-      <h2>Hello ${name},</h2>
+      <h2>Hello ${safeName},</h2>
       <p>Thank you for contacting Horizon Support. We have received your message and a member of our team will review it shortly.</p>
       <div style="background: #f3f4f6; padding: 15px; border-left: 4px solid #4f46e5; margin: 20px 0;">
         <strong>Your Message:</strong><br/>
-        <em style="color: #555;">"${message}"</em>
+        <em style="color: #555;">"${safeMessage}"</em>
       </div>
       <p>Our typical response time is under 24 hours.</p>
     </div>
@@ -76,19 +92,24 @@ export const contactConfirmationTemplate = (name: string, message: string) => `
 </body>
 </html>
 `;
+};
 
-export const ticketTemplate = (ticketId: string, topic: string, message: string) => `
+export const ticketTemplate = (ticketId: string, topic: string, message: string) => {
+  const safeTopic = escapeHtml(topic);
+  const safeMessage = escapeHtml(message);
+  const safeTicketId = escapeHtml(ticketId);
+  return `
 <!DOCTYPE html>
 <html>
 <head><style>${styles}</style></head>
 <body>
   <div class="container">
-    <div class="header"><h1>Support Ticket #${ticketId}</h1></div>
+    <div class="header"><h1>Support Ticket #${safeTicketId}</h1></div>
     <div class="content">
-      <h2>Topic: ${topic}</h2>
+      <h2>Topic: ${safeTopic}</h2>
       <p>We have logged your support request. Our engineering team has been notified.</p>
       <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-      <p>${message}</p>
+      <p>${safeMessage}</p>
       <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
       <p>You can reply directly to this email to add more information.</p>
     </div>
@@ -97,8 +118,11 @@ export const ticketTemplate = (ticketId: string, topic: string, message: string)
 </body>
 </html>
 `;
+};
 
-export const securityAlertTemplate = (action: string) => `
+export const securityAlertTemplate = (action: string) => {
+  const safeAction = escapeHtml(action);
+  return `
 <!DOCTYPE html>
 <html>
 <head><style>${styles}</style></head>
@@ -106,8 +130,8 @@ export const securityAlertTemplate = (action: string) => `
   <div class="container">
     <div class="header" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);"><h1>Security Alert</h1></div>
     <div class="content">
-      <h2>Account Update: ${action}</h2>
-      <p>We noticed a change to your account settings (${action}).</p>
+      <h2>Account Update: ${safeAction}</h2>
+      <p>We noticed a change to your account settings (${safeAction}).</p>
       <p>If this was you, no further action is needed.</p>
       <p class="highlight">If you did not make this change, please contact support immediately.</p>
     </div>
@@ -116,3 +140,4 @@ export const securityAlertTemplate = (action: string) => `
 </body>
 </html>
 `;
+};

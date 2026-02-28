@@ -23,8 +23,14 @@ export function CookieBanner() {
   };
 
   const handleDecline = () => {
-    // In a real implementation, this would disable non-essential tracking
     localStorage.setItem("horizon_cookie_consent", "false");
+    // Disable PostHog if it was already initialized
+    try {
+      const posthog = require("posthog-js").default;
+      if (posthog.__loaded) {
+        posthog.opt_out_capturing();
+      }
+    } catch { /* posthog not loaded */ }
     setIsVisible(false);
   };
 

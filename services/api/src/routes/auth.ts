@@ -73,7 +73,7 @@ export async function authRoutes(server: FastifyInstance) {
       return { success: true };
     } catch (err) {
       req.log.error(err);
-      return reply.code(500).send({ error: "Registration failed", details: String(err) });
+      return reply.code(500).send({ error: "Registration failed" });
     }
   });
 }
