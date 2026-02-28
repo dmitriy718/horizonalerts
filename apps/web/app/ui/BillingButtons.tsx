@@ -35,28 +35,32 @@ export function BillingButtons({ mode }: { mode: Mode }) {
       return;
     }
 
-    const token = await auth.currentUser.getIdToken();
-    const endpoint =
-      mode === "checkout" ? "/billing/checkout-session" : "/billing/portal-session";
-    posthog.capture("billing_initiated", { mode });
-    const res = await fetch(`${getApiBaseUrl()}${endpoint}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const endpoint =
+        mode === "checkout" ? "/billing/checkout-session" : "/billing/portal-session";
+      posthog.capture("billing_initiated", { mode });
+      const res = await fetch(`${getApiBaseUrl()}${endpoint}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (!res.ok) {
+        setStatus("Billing request failed.");
+        return;
       }
-    });
 
-    if (!res.ok) {
-      setStatus("Billing request failed.");
-      return;
+      const data = await res.json();
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setStatus("Billing session unavailable.");
+    } catch {
+      setStatus("Something went wrong. Please try again.");
     }
-
-    const data = await res.json();
-    if (data?.url) {
-      window.location.href = data.url;
-      return;
-    }
-    setStatus("Billing session unavailable.");
   };
 
   const label = mode === "checkout" ? "Start Pro" : "Manage billing";

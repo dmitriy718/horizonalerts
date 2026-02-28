@@ -56,18 +56,29 @@ export async function buildServer() {
         : "";
       const firebaseEnabled = firebaseConfigured();
 
-      if (firebaseEnabled && token) {
+      if (!token) {
+        return reply.code(401).send({ error: "unauthorized" });
+      }
+
+      if (firebaseEnabled) {
         try {
           const user = await verifyFirebaseToken(token);
           if (user) {
-            request.user = user as any;
+            request.user = {
+              uid: user.uid,
+              email: user.email,
+              email_verified: user.email_verified,
+            };
             return;
           }
+          // Firebase returned null — reject, do not fall through to JWT
+          return reply.code(401).send({ error: "unauthorized" });
         } catch {
           return reply.code(401).send({ error: "unauthorized" });
         }
       }
 
+      // Firebase not configured — use JWT only (dev/staging)
       try {
         await request.jwtVerify();
       } catch {

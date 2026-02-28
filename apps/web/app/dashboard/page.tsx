@@ -41,6 +41,7 @@ import {
   Crosshair,
   Check,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "../context/auth-context";
 import { getApiBaseUrl } from "../lib/api";
 import Link from "next/link";
@@ -220,6 +221,8 @@ export default function DashboardPage() {
   const [setupError, setSetupError] = useState("");
   const [showSetupKey, setShowSetupKey] = useState(false);
 
+  const router = useRouter();
+
   const apiFetch = useCallback(
     async (path: string) => {
       if (!user) return null;
@@ -228,10 +231,14 @@ export default function DashboardPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.status === 404) return null;
+      if (res.status === 401) {
+        router.replace("/login");
+        return null;
+      }
       if (!res.ok) throw new Error(`${res.status}`);
       return res.json();
     },
-    [user]
+    [user, router]
   );
 
   useEffect(() => {

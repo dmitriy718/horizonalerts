@@ -1,16 +1,34 @@
 import { FastifyInstance } from "fastify";
+import dns from "node:dns/promises";
 import { z } from "zod";
 import { query } from "../db.js";
 
-function isAllowedBotUrl(rawUrl: string): boolean {
+function isPrivateIp(ip: string): boolean {
+  if (ip === "localhost" || ip === "127.0.0.1" || ip === "::1" || ip === "0.0.0.0" || ip === "::") return true;
+  if (ip.startsWith("169.254.")) return true;
+  if (ip.startsWith("10.")) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(ip)) return true;
+  if (ip.startsWith("192.168.")) return true;
+  // IPv6 private ranges
+  if (ip.startsWith("fc") || ip.startsWith("fd") || ip.startsWith("fe80")) return true;
+  return false;
+}
+
+async function isAllowedBotUrl(rawUrl: string): Promise<boolean> {
   try {
     const u = new URL(rawUrl);
     const hostname = u.hostname;
-    if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1") return false;
-    if (hostname.startsWith("169.254.")) return false;
-    if (hostname.startsWith("10.")) return false;
-    if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return false;
-    if (hostname.startsWith("192.168.")) return false;
+    // Quick string check
+    if (isPrivateIp(hostname)) return false;
+    // DNS resolution check (anti-rebinding)
+    try {
+      const addresses = await dns.lookup(hostname, { all: true });
+      for (const { address } of addresses) {
+        if (isPrivateIp(address)) return false;
+      }
+    } catch {
+      return false; // DNS resolution failed
+    }
     return true;
   } catch { return false; }
 }
@@ -64,14 +82,14 @@ async function proxyToBot(
 export async function botRoutes(server: FastifyInstance) {
   // --- Proxy endpoints ---
 
-  const proxyEndpoints: { route: string; botPath: string }[] = [
+  const proxyEndpoints: { route: string; botPath: string; allowedQs?: string[] }[] = [
     { route: "/status", botPath: "/api/v1/status" },
     { route: "/performance", botPath: "/api/v1/performance" },
     { route: "/positions", botPath: "/api/v1/positions" },
-    { route: "/trades", botPath: "/api/v1/trades" },
+    { route: "/trades", botPath: "/api/v1/trades", allowedQs: ["limit", "offset"] },
     { route: "/strategies", botPath: "/api/v1/strategy-performance" },
     { route: "/risk", botPath: "/api/v1/risk" },
-    { route: "/thoughts", botPath: "/api/v1/thoughts" },
+    { route: "/thoughts", botPath: "/api/v1/thoughts", allowedQs: ["limit"] },
   ];
 
   for (const ep of proxyEndpoints) {
@@ -86,12 +104,15 @@ export async function botRoutes(server: FastifyInstance) {
         }
 
         try {
-          const qs =
-            typeof (request.query as Record<string, string>) === "object"
-              ? new URLSearchParams(
-                  request.query as Record<string, string>
-                ).toString()
-              : "";
+          // Only forward allowlisted query parameters
+          let qs = "";
+          if (ep.allowedQs && typeof request.query === "object") {
+            const raw = request.query as Record<string, string>;
+            const safe = Object.fromEntries(
+              Object.entries(raw).filter(([k]) => ep.allowedQs!.includes(k))
+            );
+            qs = new URLSearchParams(safe).toString();
+          }
           const result = await proxyToBot(
             conn.bot_url,
             conn.api_key,
@@ -146,7 +167,7 @@ export async function botRoutes(server: FastifyInstance) {
       const { uid } = request.user;
 
       // SSRF protection — block private network addresses
-      if (!isAllowedBotUrl(bot_url)) {
+      if (!(await isAllowedBotUrl(bot_url))) {
         return reply.code(422).send({
           error: "invalid_bot_url",
           message: "Bot URL cannot point to internal network addresses",

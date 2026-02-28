@@ -5,17 +5,20 @@ import path from "path";
 
 export async function publicFeedRoutes(server: FastifyInstance) {
   server.get("/candidates", async () => {
+    const ALLOWED_FILES = new Set(["day_candidates.json", "swing_candidates.json", "invest_candidates.json"]);
+
     const readCandidates = (filename: string) => {
+      if (!ALLOWED_FILES.has(filename)) return [];
       try {
         const filePath = path.join(process.cwd(), "../content", filename); // Local dev
         const prodPath = path.join("/app/content", filename); // Docker
-        
+
         const target = fs.existsSync(prodPath) ? prodPath : filePath;
-        
+
         if (fs.existsSync(target)) {
           return JSON.parse(fs.readFileSync(target, "utf-8"));
         }
-      } catch (e) {
+      } catch {
         // ignore
       }
       return [];
