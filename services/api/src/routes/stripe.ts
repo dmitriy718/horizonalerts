@@ -49,6 +49,8 @@ export async function stripeRoutes(server: FastifyInstance) {
                updated_at = now()`,
           [uid, plan, subscription.status, subscription.current_period_end]
         );
+      } else {
+        server.log.warn({ event: event.type, subscriptionId: subscription.id }, "stripe webhook missing uid in metadata");
       }
     }
 
@@ -62,6 +64,8 @@ export async function stripeRoutes(server: FastifyInstance) {
            where uid = $1`,
           [uid]
         );
+      } else {
+        server.log.warn({ event: event.type, subscriptionId: subscription.id }, "stripe webhook missing uid in metadata");
       }
     }
 

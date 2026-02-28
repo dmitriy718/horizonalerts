@@ -8,9 +8,16 @@ import { firebaseConfigured, verifyFirebaseToken } from "./auth/firebase.js";
 export async function buildServer() {
   const server = Fastify({ logger: true, trustProxy: true });
 
+  const allowedOrigins = (process.env.CORS_ORIGINS || "https://horizonsvc.com,http://localhost:3000").split(",");
   await server.register(cors, {
-    origin: true,
-    credentials: true
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"), false);
+      }
+    },
+    credentials: true,
   });
 
   await server.register(rateLimit, {
@@ -34,8 +41,11 @@ export async function buildServer() {
     }
   );
 
-  const jwtSecret = process.env.JWT_SIGNING_KEY || "dev-secret-change";
-  await server.register(jwt, { secret: jwtSecret });
+  const jwtSecret = process.env.JWT_SIGNING_KEY;
+  if (process.env.NODE_ENV === "production" && (!jwtSecret || jwtSecret === "dev-secret-change")) {
+    throw new Error("JWT_SIGNING_KEY must be set to a secure value in production");
+  }
+  await server.register(jwt, { secret: jwtSecret || "dev-secret-change-local-only" });
 
   server.decorate(
     "requireAuth",

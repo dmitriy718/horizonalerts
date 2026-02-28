@@ -4,18 +4,48 @@ import { sendEmail } from "../services/email.js";
 import { z } from "zod";
 
 const ticketSchema = z.object({
-  topic: z.string(),
-  subject: z.string(),
-  message: z.string(),
-  file: z.any().optional() // Handled via multipart usually, but simplifying for JSON payload for now
+  topic: z.string().min(1).max(100),
+  subject: z.string().min(1).max(200),
+  message: z.string().min(1).max(5000),
+  file: z.any().optional()
 });
 
+const contactSchema = z.object({
+  name: z.string().min(1).max(100),
+  email: z.string().email().max(254),
+  subject: z.string().min(1).max(200),
+  message: z.string().min(1).max(5000),
+});
+
+// Simple in-memory rate limiter for contact form (per IP, 5 per hour)
+const contactRateMap = new Map<string, number[]>();
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const window = 60 * 60 * 1000; // 1 hour
+  const maxRequests = 5;
+  const timestamps = (contactRateMap.get(ip) || []).filter(t => now - t < window);
+  if (timestamps.length >= maxRequests) return true;
+  timestamps.push(now);
+  contactRateMap.set(ip, timestamps);
+  return false;
+}
+
 export async function helpRoutes(server: FastifyInstance) {
-  
+
   // Public Contact Form
   server.post("/public/contact", async (req, reply) => {
-    const { name, email, subject, message } = req.body as any;
-    
+    const ip = req.ip;
+    if (isRateLimited(ip)) {
+      return reply.code(429).send({ error: "Too many requests. Please try again later." });
+    }
+
+    const parse = contactSchema.safeParse(req.body);
+    if (!parse.success) {
+      return reply.code(400).send({ error: "invalid_request", details: parse.error.flatten() });
+    }
+
+    const { name, email, subject, message } = parse.data;
+
     // Send Confirmation to User
     await sendEmail({
       to: email,
@@ -27,7 +57,7 @@ export async function helpRoutes(server: FastifyInstance) {
 
     // Notify Admin
     await sendEmail({
-      to: "dmitriy@horizonsvc.com", // Admin email
+      to: "dmitriy@horizonsvc.com",
       type: "support",
       subject: `[Contact Form] ${subject}`,
       html: `From: ${name} (${email})<br/>Message: ${message}`

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   Check,
@@ -406,7 +406,7 @@ export function PricingClient() {
               <div className="mt-8">
                 <button
                   onClick={() =>
-                    router.push(`/onboarding?plan=${tier.id}&hosting=${hosted ? "managed" : "self"}`)
+                    router.push(`/onboarding?plan=${tier.id}&hosting=${hosted ? "managed" : "self-hosted"}`)
                   }
                   className={`group w-full flex items-center justify-center gap-2 rounded-xl px-4 py-4 text-sm font-bold transition-all ${
                     tier.highlighted
@@ -532,16 +532,15 @@ export function PricingClient() {
                   const showCategory = row.category !== lastCategory;
                   lastCategory = row.category;
                   return (
-                    <>
+                    <React.Fragment key={`row-${i}`}>
                       {showCategory && (
-                        <tr key={`cat-${row.category}`} className="bg-white/[0.02]">
+                        <tr className="bg-white/[0.02]">
                           <td colSpan={4} className="px-6 py-3 text-xs font-bold uppercase tracking-widest text-slate-500">
                             {row.category}
                           </td>
                         </tr>
                       )}
                       <tr
-                        key={row.feature}
                         className={`border-b border-white/5 ${i % 2 === 0 ? "bg-white/[0.01]" : ""}`}
                       >
                         <td className="px-6 py-3 text-slate-300">{row.feature}</td>
@@ -562,7 +561,7 @@ export function PricingClient() {
                           );
                         })}
                       </tr>
-                    </>
+                    </React.Fragment>
                   );
                 });
               })()}

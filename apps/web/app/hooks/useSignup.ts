@@ -14,6 +14,15 @@ export interface SignupData {
   preferences?: Record<string, any>;
 }
 
+const firebaseErrors: Record<string, string> = {
+  "email-already-in-use": "Email already in use.",
+  "weak-password": "Password should be at least 6 characters.",
+  "invalid-email": "Please enter a valid email address.",
+  "too-many-requests": "Too many attempts. Please try again later.",
+  "network-request-failed": "Network error. Please check your connection.",
+  "operation-not-allowed": "Sign-up is temporarily disabled.",
+};
+
 export function useSignup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,9 +39,11 @@ export function useSignup() {
       return false;
     }
 
+    let cred: any = null;
+
     try {
       // 1. Create Firebase User
-      const cred = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      cred = await createUserWithEmailAndPassword(auth, data.email, data.password);
       const token = await cred.user.getIdToken();
 
       // 2. Sync to Backend
@@ -53,8 +64,10 @@ export function useSignup() {
       });
 
       if (!res.ok) {
-        const json = await res.json();
-        throw new Error(json.error || "Failed to sync profile.");
+        const json = await res.json().catch(() => ({}));
+        // Roll back: delete the Firebase user we just created
+        try { await cred.user.delete(); } catch { /* best effort */ }
+        throw new Error(json.error || "Failed to create account. Please try again.");
       }
 
       // 3. Success
@@ -63,11 +76,18 @@ export function useSignup() {
 
     } catch (err: any) {
       console.error("Signup Error:", err);
+      const msg = err.message || "";
+
       // Map Firebase errors to user-friendly messages
-      let msg = err.message;
-      if (msg.includes("email-already-in-use")) msg = "Email already in use.";
-      if (msg.includes("weak-password")) msg = "Password should be at least 6 characters.";
-      setError(msg);
+      for (const [key, friendlyMsg] of Object.entries(firebaseErrors)) {
+        if (msg.includes(key)) {
+          setError(friendlyMsg);
+          return false;
+        }
+      }
+
+      // Generic fallback — never show raw error details
+      setError(msg.includes("Failed to") ? msg : "An error occurred. Please try again.");
       return false;
     } finally {
       setLoading(false);

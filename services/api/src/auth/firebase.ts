@@ -35,8 +35,10 @@ function resolveServiceAccount() {
   return null;
 }
 
+const _cachedServiceAccount = resolveServiceAccount();
+
 export function firebaseConfigured() {
-  return Boolean(resolveServiceAccount());
+  return Boolean(_cachedServiceAccount);
 }
 
 export function getFirebaseApp() {
@@ -44,10 +46,10 @@ export function getFirebaseApp() {
     return app;
   }
 
-  const serviceAccount = resolveServiceAccount();
-  if (!serviceAccount) {
+  if (!_cachedServiceAccount) {
     return null;
   }
+  const serviceAccount = _cachedServiceAccount;
 
   app = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
@@ -70,7 +72,7 @@ export async function verifyFirebaseToken(idToken: string) {
     return null;
   }
 
-  const decoded = await admin.auth().verifyIdToken(idToken);
+  const decoded = await admin.auth(firebaseApp).verifyIdToken(idToken);
   return {
     uid: decoded.uid,
     email: decoded.email || "",

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   LayoutDashboard,
   List,
@@ -39,6 +39,7 @@ import {
   DollarSign,
   Percent,
   Crosshair,
+  Check,
 } from "lucide-react";
 import { useAuth } from "../context/auth-context";
 import { getApiBaseUrl } from "../lib/api";
@@ -102,7 +103,11 @@ function pnlBg(n: number | undefined | null): string {
 }
 
 function duration(start: string, end?: string): string {
-  const ms = (end ? new Date(end).getTime() : Date.now()) - new Date(start).getTime();
+  const startMs = new Date(start).getTime();
+  const endMs = end ? new Date(end).getTime() : Date.now();
+  if (isNaN(startMs) || isNaN(endMs)) return "—";
+  const ms = endMs - startMs;
+  if (ms < 0) return "—";
   const mins = Math.floor(ms / 60000);
   if (mins < 60) return `${mins}m`;
   const hrs = Math.floor(mins / 60);
@@ -143,21 +148,27 @@ function getRank(level: number) {
 }
 
 function computeWinStreak(tradeList: any[]): { current: number; best: number } {
+  if (!tradeList.length) return { current: 0, best: 0 };
+
+  // Sort newest-first by exit_time
+  const sorted = [...tradeList].sort((a, b) => {
+    const ta = a.exit_time ? new Date(a.exit_time).getTime() : 0;
+    const tb = b.exit_time ? new Date(b.exit_time).getTime() : 0;
+    return tb - ta;
+  });
+
+  // Current streak from most recent trades
   let current = 0;
-  let best = 0;
-  // Trades should be newest first — iterate to find current streak
-  for (const t of tradeList) {
+  for (const t of sorted) {
     const pnl = t.pnl ?? t.realized_pnl ?? 0;
-    if (pnl > 0) {
-      current++;
-      best = Math.max(best, current);
-    } else {
-      if (current > 0) break; // first loss breaks current streak
-    }
+    if (pnl > 0) current++;
+    else break;
   }
-  // Also compute best streak through all trades
+
+  // Best streak through all trades (oldest-first)
+  let best = current;
   let streak = 0;
-  for (const t of [...tradeList].reverse()) {
+  for (const t of [...sorted].reverse()) {
     const pnl = t.pnl ?? t.realized_pnl ?? 0;
     if (pnl > 0) {
       streak++;
@@ -266,10 +277,22 @@ export default function DashboardPage() {
     }
   };
 
+  const failCountRef = useRef(0);
+
   useEffect(() => {
     if (!user || connected === false || connected === null) return;
 
+    let fastTimer: ReturnType<typeof setTimeout>;
+    let slowTimer: ReturnType<typeof setTimeout>;
+    let cancelled = false;
+
+    const getBackoffMs = (baseMs: number) => {
+      if (failCountRef.current === 0) return baseMs;
+      return Math.min(baseMs * Math.pow(2, failCountRef.current), 60000);
+    };
+
     const fetchFast = async () => {
+      if (cancelled) return;
       try {
         const [perf, pos, status] = await Promise.all([
           apiFetch("/performance"),
@@ -280,12 +303,16 @@ export default function DashboardPage() {
         if (pos) setPositions(Array.isArray(pos) ? pos : pos?.positions || pos?.open_positions || []);
         if (status) setBotStatus(status);
         setLastUpdate(new Date());
+        failCountRef.current = 0;
       } catch (e) {
+        failCountRef.current = Math.min(failCountRef.current + 1, 5);
         console.error("fast poll error", e);
       }
+      if (!cancelled) fastTimer = setTimeout(fetchFast, getBackoffMs(5000));
     };
 
     const fetchSlow = async () => {
+      if (cancelled) return;
       try {
         const [tr, strat, rsk, th] = await Promise.all([
           apiFetch("/trades?limit=100"),
@@ -300,15 +327,15 @@ export default function DashboardPage() {
       } catch (e) {
         console.error("slow poll error", e);
       }
+      if (!cancelled) slowTimer = setTimeout(fetchSlow, getBackoffMs(15000));
     };
 
     fetchFast();
     fetchSlow();
-    const fast = setInterval(fetchFast, 5000);
-    const slow = setInterval(fetchSlow, 15000);
     return () => {
-      clearInterval(fast);
-      clearInterval(slow);
+      cancelled = true;
+      clearTimeout(fastTimer);
+      clearTimeout(slowTimer);
     };
   }, [user, connected, apiFetch]);
 
@@ -1188,22 +1215,3 @@ export default function DashboardPage() {
   );
 }
 
-// Missing Check import used in achievements
-function Check({ size, className }: { size: number; className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}

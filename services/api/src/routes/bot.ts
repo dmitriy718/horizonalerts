@@ -2,6 +2,19 @@ import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { query } from "../db.js";
 
+function isAllowedBotUrl(rawUrl: string): boolean {
+  try {
+    const u = new URL(rawUrl);
+    const hostname = u.hostname;
+    if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1") return false;
+    if (hostname.startsWith("169.254.")) return false;
+    if (hostname.startsWith("10.")) return false;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(hostname)) return false;
+    if (hostname.startsWith("192.168.")) return false;
+    return true;
+  } catch { return false; }
+}
+
 const upsertSchema = z.object({
   bot_url: z.string().url(),
   api_key: z.string().min(1),
@@ -131,6 +144,14 @@ export async function botRoutes(server: FastifyInstance) {
 
       const { bot_url, api_key, hosting_type, label } = parse.data;
       const { uid } = request.user;
+
+      // SSRF protection — block private network addresses
+      if (!isAllowedBotUrl(bot_url)) {
+        return reply.code(422).send({
+          error: "invalid_bot_url",
+          message: "Bot URL cannot point to internal network addresses",
+        });
+      }
 
       // Validate the connection by hitting the bot's status endpoint
       try {
