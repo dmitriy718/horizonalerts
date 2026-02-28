@@ -73,6 +73,7 @@ async function proxyToBot(
   const res = await fetch(url, {
     headers: { "X-API-Key": apiKey, Accept: "application/json" },
     signal: AbortSignal.timeout(10_000),
+    redirect: "error", // Never follow redirects (SSRF protection)
   });
 
   const data = await res.json().catch(() => null);

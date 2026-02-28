@@ -378,7 +378,8 @@ export default function DashboardPage() {
   const xp = getXp(totalTrades, wins);
   const xpForCurrent = getXpForLevel(level);
   const xpForNext = getXpForLevel(level + 1);
-  const xpProgress = Math.min(((xp - xpForCurrent) / (xpForNext - xpForCurrent)) * 100, 100);
+  const xpRange = xpForNext - xpForCurrent;
+  const xpProgress = xpRange > 0 ? Math.min(Math.max(((xp - xpForCurrent) / xpRange) * 100, 0), 100) : 0;
   const rank = getRank(level);
   const RankIcon = rank.icon;
 

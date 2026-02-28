@@ -2,7 +2,7 @@ import { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { query } from "../db.js";
 import { sendEmail } from "../services/email.js";
-import { auth as adminAuth } from "../auth/firebase.js";
+import { getAdminAuth } from "../auth/firebase.js";
 
 const RegisterSchema = z.object({
   firstName: z.string().min(1),
@@ -18,8 +18,8 @@ const RegisterSchema = z.object({
 
 export async function authRoutes(server: FastifyInstance) {
   server.post("/register", { preHandler: [server.requireAuth] }, async (req, reply) => {
-    const user = (req as any).user; 
-    
+    const { uid, email: tokenEmail } = req.user;
+
     // Parse body
     let body;
     try {
@@ -29,9 +29,9 @@ export async function authRoutes(server: FastifyInstance) {
       return reply.code(400).send({ error: "invalid_request", ...(details ? { details } : {}) });
     }
 
-    // Security check: Ensure token email matches body email (optional but good)
-    if (user.email && user.email !== body.email) {
-      return reply.code(403).send({ error: "Email mismatch" });
+    // Security check: Ensure token email matches body email (case-insensitive)
+    if (tokenEmail && tokenEmail.toLowerCase() !== body.email.toLowerCase()) {
+      return reply.code(403).send({ error: "email_mismatch" });
     }
 
     try {
@@ -49,11 +49,11 @@ export async function authRoutes(server: FastifyInstance) {
          state = EXCLUDED.state,
          preferences = COALESCE(users.preferences, '{}'::jsonb) || EXCLUDED.preferences,
          updated_at = now()`,
-        [user.uid, body.email, body.firstName, body.lastName, body.age, body.zipCode, body.streetAddress || null, body.city || null, body.state || null, JSON.stringify(body.preferences || {})]
+        [uid, body.email, body.firstName, body.lastName, body.age, body.zipCode, body.streetAddress || null, body.city || null, body.state || null, JSON.stringify(body.preferences || {})]
       );
 
       // 2. Generate Custom Verification Link
-      const link = await adminAuth.generateEmailVerificationLink(body.email);
+      const link = await getAdminAuth().generateEmailVerificationLink(body.email);
 
       // 3. Send Email via SMTP
       await sendEmail({
