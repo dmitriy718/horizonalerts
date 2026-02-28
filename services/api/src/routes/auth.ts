@@ -24,8 +24,9 @@ export async function authRoutes(server: FastifyInstance) {
     let body;
     try {
       body = RegisterSchema.parse(req.body);
-    } catch (e) {
-      return reply.code(400).send({ error: "Validation failed", details: e });
+    } catch (e: unknown) {
+      const details = e instanceof z.ZodError ? e.flatten().fieldErrors : undefined;
+      return reply.code(400).send({ error: "invalid_request", ...(details ? { details } : {}) });
     }
 
     // Security check: Ensure token email matches body email (optional but good)

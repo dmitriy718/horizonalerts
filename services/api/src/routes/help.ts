@@ -19,16 +19,27 @@ const contactSchema = z.object({
 
 // Simple in-memory rate limiter for contact form (per IP, 5 per hour)
 const contactRateMap = new Map<string, number[]>();
+const RATE_WINDOW = 60 * 60 * 1000; // 1 hour
+const RATE_MAX = 5;
+
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
-  const window = 60 * 60 * 1000; // 1 hour
-  const maxRequests = 5;
-  const timestamps = (contactRateMap.get(ip) || []).filter(t => now - t < window);
-  if (timestamps.length >= maxRequests) return true;
+  const timestamps = (contactRateMap.get(ip) || []).filter(t => now - t < RATE_WINDOW);
+  if (timestamps.length >= RATE_MAX) return true;
   timestamps.push(now);
   contactRateMap.set(ip, timestamps);
   return false;
 }
+
+// Cleanup stale entries every 10 minutes to prevent memory leak
+setInterval(() => {
+  const cutoff = Date.now() - RATE_WINDOW;
+  for (const [ip, times] of contactRateMap) {
+    const filtered = times.filter(t => t > cutoff);
+    if (filtered.length === 0) contactRateMap.delete(ip);
+    else contactRateMap.set(ip, filtered);
+  }
+}, 10 * 60 * 1000).unref();
 
 export async function helpRoutes(server: FastifyInstance) {
 
@@ -46,22 +57,27 @@ export async function helpRoutes(server: FastifyInstance) {
 
     const { name, email, subject, message } = parse.data;
 
-    // Send Confirmation to User
-    await sendEmail({
-      to: email,
-      type: "support",
-      subject: `Received: ${subject}`,
-      template: "contact",
-      data: { name, message }
-    });
+    try {
+      // Send Confirmation to User
+      await sendEmail({
+        to: email,
+        type: "support",
+        subject: `Received: ${subject}`,
+        template: "contact",
+        data: { name, message }
+      });
 
-    // Notify Admin
-    await sendEmail({
-      to: "dmitriy@horizonsvc.com",
-      type: "support",
-      subject: `[Contact Form] ${subject}`,
-      html: `From: ${name} (${email})<br/>Message: ${message}`
-    });
+      // Notify Admin (escape user content for HTML safety)
+      const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      await sendEmail({
+        to: process.env.ADMIN_NOTIFICATION_EMAIL || "support@horizonsvc.com",
+        type: "support",
+        subject: `[Contact Form] ${subject}`,
+        html: `From: ${esc(name)} (${esc(email)})<br/>Message: ${esc(message)}`
+      });
+    } catch (err) {
+      req.log.error(err, "contact email failed");
+    }
 
     return { success: true };
   });
@@ -69,7 +85,11 @@ export async function helpRoutes(server: FastifyInstance) {
   // Auth-only Ticket System
   server.post("/ticket", { preHandler: server.requireAuth }, async (req, reply) => {
     const { uid, email } = req.user;
-    const body = ticketSchema.parse(req.body);
+    const ticketParse = ticketSchema.safeParse(req.body);
+    if (!ticketParse.success) {
+      return reply.code(400).send({ error: "invalid_request", details: ticketParse.error.flatten() });
+    }
+    const body = ticketParse.data;
 
     // Save to DB
     const res = await query(

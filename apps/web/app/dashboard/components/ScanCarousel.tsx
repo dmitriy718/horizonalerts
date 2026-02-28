@@ -13,6 +13,8 @@ export function ScanCarousel({ candidates, activeFilters, onMatchFound }: ScanCa
   const [activeScan, setActiveScan] = useState<string | null>(null);
   const [scanStep, setScanStep] = useState(0);
   const stepIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const onMatchFoundRef = useRef(onMatchFound);
+  useEffect(() => { onMatchFoundRef.current = onMatchFound; }, [onMatchFound]);
 
   useEffect(() => {
     if (candidates.length === 0) return;
@@ -45,7 +47,7 @@ export function ScanCarousel({ candidates, activeFilters, onMatchFound }: ScanCa
           if (stepIntervalRef.current) clearInterval(stepIntervalRef.current);
           stepIntervalRef.current = null;
           if (Math.random() > 0.7) {
-            onMatchFound(randomTicker);
+            onMatchFoundRef.current(randomTicker);
           }
           setActiveScan(null);
         }
@@ -57,7 +59,7 @@ export function ScanCarousel({ candidates, activeFilters, onMatchFound }: ScanCa
       clearInterval(interval);
       if (stepIntervalRef.current) clearInterval(stepIntervalRef.current);
     };
-  }, [candidates, onMatchFound, activeFilters]);
+  }, [candidates, activeFilters]);
 
   return (
     <div className="relative mb-8 overflow-hidden rounded-2xl border border-white/10 bg-slate-900/50 p-6 backdrop-blur-md">

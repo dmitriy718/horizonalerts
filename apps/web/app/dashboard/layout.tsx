@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/auth-context";
-import { sendEmailVerification, getAuth } from "firebase/auth";
+import { sendEmailVerification } from "firebase/auth";
+import { getFirebaseAuth } from "../lib/firebase";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -17,31 +18,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [user, loading, router]);
 
-  // Email verification polling
+  // Email verification polling — use stable deps to avoid re-creating interval
   useEffect(() => {
-    if (!loading && user && !user.emailVerified) {
-      setShowVerificationModal(true);
+    if (loading || !user || user.emailVerified) return;
 
-      const interval = setInterval(async () => {
-        // Use auth.currentUser to get a fresh reference
-        const auth = getAuth();
-        const currentUser = auth.currentUser;
-        if (currentUser) {
-          await currentUser.reload();
-          if (currentUser.emailVerified) {
-            setShowVerificationModal(false);
-            clearInterval(interval);
-          }
-        }
-      }, 3000);
+    setShowVerificationModal(true);
+    const auth = getFirebaseAuth();
+    if (!auth) return;
 
-      return () => clearInterval(interval);
-    }
-  }, [user, loading]);
+    const interval = setInterval(async () => {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        clearInterval(interval);
+        return;
+      }
+      await currentUser.reload();
+      if (currentUser.emailVerified) {
+        setShowVerificationModal(false);
+        clearInterval(interval);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [user?.uid, user?.emailVerified, loading]);
 
   const handleResend = async () => {
-    const auth = getAuth();
-    const currentUser = auth.currentUser;
+    const auth = getFirebaseAuth();
+    const currentUser = auth?.currentUser;
     if (currentUser) {
       await sendEmailVerification(currentUser);
       setEmailSent(true);
@@ -49,7 +52,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   if (loading) return <div className="min-h-screen pt-24 text-center">Loading Dashboard...</div>;
-  if (!user) return null; // Will redirect via effect above
+  if (!user) return null;
 
   return (
     <>

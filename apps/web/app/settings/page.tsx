@@ -38,7 +38,7 @@ export default function SettingsPage() {
         ...options,
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          ...(options?.body ? { "Content-Type": "application/json" } : {}),
           ...(options?.headers || {}),
         },
       });

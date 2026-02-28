@@ -14,6 +14,11 @@ export async function stripeRoutes(server: FastifyInstance) {
     async (request, reply) => {
     const signature = request.headers["stripe-signature"];
 
+    if (!webhookSecret) {
+      server.log.error("STRIPE_WEBHOOK_SECRET is not configured");
+      return reply.code(500).send({ error: "webhook_not_configured" });
+    }
+
     if (!signature || typeof signature !== "string") {
       return reply.code(400).send({ error: "missing_signature" });
     }

@@ -30,6 +30,6 @@ declare module "fastify" {
   }
 
   interface FastifyInstance {
-    requireAuth: any;
+    requireAuth: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
 }

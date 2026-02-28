@@ -1,4 +1,4 @@
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
@@ -11,27 +11,22 @@ const config = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
 };
 
-export const app = !getApps().length ? initializeApp(config) : getApps()[0];
+const hasConfig = Boolean(config.apiKey && config.projectId);
+
+export const app: FirebaseApp | null = hasConfig
+  ? (!getApps().length ? initializeApp(config) : getApps()[0])
+  : null;
 
 export function getFirebaseApp() {
-  if (!config.apiKey || !config.projectId) {
-    return null;
-  }
   return app;
 }
 
 export function getFirebaseAuth() {
-  const app = getFirebaseApp();
-  if (!app) {
-    return null;
-  }
+  if (!app) return null;
   return getAuth(app);
 }
 
 export function getFirebaseDb() {
-  const app = getFirebaseApp();
-  if (!app) {
-    return null;
-  }
+  if (!app) return null;
   return getFirestore(app);
 }

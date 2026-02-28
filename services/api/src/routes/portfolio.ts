@@ -7,7 +7,7 @@ const actSchema = z.object({
   symbol: z.string().min(1).max(12),
   action: z.enum(["enter", "exit"]),
   price: z.number().positive(),
-  decidedAt: z.string()
+  decidedAt: z.string().datetime({ offset: true })
 });
 
 export async function portfolioRoutes(server: FastifyInstance) {
