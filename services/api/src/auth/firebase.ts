@@ -58,13 +58,11 @@ export function getFirebaseApp() {
   return app;
 }
 
-export const auth = new Proxy({}, {
-  get: (_target, prop) => {
-    const app = getFirebaseApp();
-    if (!app) throw new Error("Firebase Admin not initialized");
-    return (admin.auth() as any)[prop];
-  }
-}) as admin.auth.Auth;
+export function getAdminAuth(): admin.auth.Auth {
+  const app = getFirebaseApp();
+  if (!app) throw new Error("Firebase Admin not initialized");
+  return admin.auth(app);
+}
 
 export async function verifyFirebaseToken(idToken: string) {
   const firebaseApp = getFirebaseApp();

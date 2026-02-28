@@ -2,15 +2,13 @@
 
 import { useState } from "react";
 import posthog from "posthog-js";
-import { doc, getDoc } from "firebase/firestore";
-import { getFirebaseAuth, getFirebaseDb } from "../lib/firebase";
+import { getFirebaseAuth } from "../lib/firebase";
 import { getApiBaseUrl } from "../lib/api";
 
 type Mode = "checkout" | "portal";
 
 export function BillingButtons({ mode }: { mode: Mode }) {
   const auth = getFirebaseAuth();
-  const db = getFirebaseDb();
   const [status, setStatus] = useState<string>("");
 
   const handleClick = async () => {
@@ -21,17 +19,6 @@ export function BillingButtons({ mode }: { mode: Mode }) {
     }
     if (!auth.currentUser.emailVerified) {
       setStatus("Please verify your email to continue.");
-      return;
-    }
-    if (!db) {
-      setStatus("Onboarding data unavailable.");
-      return;
-    }
-
-    const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-    const onboardingComplete = Boolean(userDoc.data()?.onboardingComplete);
-    if (!onboardingComplete) {
-      setStatus("Complete onboarding before upgrading.");
       return;
     }
 

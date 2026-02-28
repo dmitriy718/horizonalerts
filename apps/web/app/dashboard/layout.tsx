@@ -10,6 +10,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   // Redirect unauthenticated users
   useEffect(() => {
@@ -18,7 +19,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [user, loading, router]);
 
-  // Email verification polling — use stable deps to avoid re-creating interval
+  // Email verification polling
   useEffect(() => {
     if (loading || !user || user.emailVerified) return;
 
@@ -43,11 +44,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [user?.uid, user?.emailVerified, loading]);
 
   const handleResend = async () => {
+    if (resendLoading || emailSent) return;
     const auth = getFirebaseAuth();
     const currentUser = auth?.currentUser;
-    if (currentUser) {
+    if (!currentUser) return;
+    setResendLoading(true);
+    try {
       await sendEmailVerification(currentUser);
       setEmailSent(true);
+    } catch (err) {
+      console.error("Failed to resend verification:", err);
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -72,10 +80,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </p>
             <button
               onClick={handleResend}
-              disabled={emailSent}
-              className="btn-primary w-full"
+              disabled={emailSent || resendLoading}
+              className="btn-primary w-full disabled:opacity-50"
             >
-              {emailSent ? "Sent! Check Inbox" : "Resend Verification Email"}
+              {resendLoading ? "Sending..." : emailSent ? "Sent! Check Inbox" : "Resend Verification Email"}
             </button>
             <p className="mt-4 text-xs text-slate-500">
               We are checking verification status automatically...

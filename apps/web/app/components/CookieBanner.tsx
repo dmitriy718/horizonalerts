@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Cookie } from "lucide-react";
+import posthog from "posthog-js";
 
 export function CookieBanner() {
   const [isVisible, setIsVisible] = useState(false);
@@ -24,13 +25,9 @@ export function CookieBanner() {
 
   const handleDecline = () => {
     localStorage.setItem("horizon_cookie_consent", "false");
-    // Disable PostHog if it was already initialized
     try {
-      const posthog = require("posthog-js").default;
-      if (posthog.__loaded) {
-        posthog.opt_out_capturing();
-      }
-    } catch { /* posthog not loaded */ }
+      posthog.opt_out_capturing();
+    } catch { /* posthog not initialized */ }
     setIsVisible(false);
   };
 
