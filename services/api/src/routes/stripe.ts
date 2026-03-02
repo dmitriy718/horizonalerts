@@ -41,8 +41,35 @@ export async function stripeRoutes(server: FastifyInstance) {
 
     if (event.type === "customer.subscription.created" || event.type === "customer.subscription.updated") {
       const subscription = event.data.object as Stripe.Subscription;
-      const uid = subscription.metadata?.uid;
+      let uid = subscription.metadata?.uid;
       const plan = subscription.items.data[0]?.price?.metadata?.plan || "pro";
+
+      // Fallback: look up uid by customer email when metadata is missing
+      // (e.g., subscriptions created from Stripe dashboard or when session
+      // metadata wasn't copied to subscription_data).
+      if (!uid) {
+        const customerId = typeof subscription.customer === "string"
+          ? subscription.customer
+          : subscription.customer?.id;
+        if (customerId) {
+          try {
+            const customer = await stripe.customers.retrieve(customerId);
+            if (!customer.deleted && customer.email) {
+              const userRows = await query<{ uid: string }>(
+                `SELECT uid FROM users WHERE email = $1 LIMIT 1`,
+                [customer.email]
+              );
+              if (userRows.length) {
+                uid = userRows[0].uid;
+                server.log.info({ email: customer.email, uid }, "resolved uid from customer email");
+              }
+            }
+          } catch (e) {
+            server.log.warn({ customerId, error: e }, "failed to resolve uid from customer");
+          }
+        }
+      }
+
       if (uid) {
         await query(
           `insert into stripe_entitlements (uid, plan, status, current_period_end, updated_at)
@@ -55,13 +82,33 @@ export async function stripeRoutes(server: FastifyInstance) {
           [uid, plan, subscription.status, subscription.current_period_end]
         );
       } else {
-        server.log.warn({ event: event.type, subscriptionId: subscription.id }, "stripe webhook missing uid in metadata");
+        server.log.warn({ event: event.type, subscriptionId: subscription.id }, "stripe webhook missing uid in metadata — could not resolve");
       }
     }
 
     if (event.type === "customer.subscription.deleted") {
       const subscription = event.data.object as Stripe.Subscription;
-      const uid = subscription.metadata?.uid;
+      let uid = subscription.metadata?.uid;
+
+      // Same fallback as above
+      if (!uid) {
+        const customerId = typeof subscription.customer === "string"
+          ? subscription.customer
+          : subscription.customer?.id;
+        if (customerId) {
+          try {
+            const customer = await stripe.customers.retrieve(customerId);
+            if (!customer.deleted && customer.email) {
+              const userRows = await query<{ uid: string }>(
+                `SELECT uid FROM users WHERE email = $1 LIMIT 1`,
+                [customer.email]
+              );
+              if (userRows.length) uid = userRows[0].uid;
+            }
+          } catch { /* ignore */ }
+        }
+      }
+
       if (uid) {
         await query(
           `update stripe_entitlements

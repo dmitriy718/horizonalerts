@@ -14,9 +14,9 @@ export function Analytics() {
       return;
     }
 
-    // Respect cookie consent
+    // GDPR: only initialize analytics after explicit consent
     const consent = typeof window !== "undefined" ? localStorage.getItem("horizon_cookie_consent") : null;
-    if (consent === "false") return;
+    if (consent !== "true") return;
 
     posthog.init(key, { api_host: host, autocapture: true });
     initialized.current = true;

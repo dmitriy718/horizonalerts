@@ -10,8 +10,17 @@ const runSchema = z.object({
 export async function scannerRoutes(server: FastifyInstance) {
   // Pro Real-time Feed
   server.get("/", { preHandler: server.requireAuth }, async (request, reply) => {
-    const { email_verified } = request.user;
+    const { uid, email_verified } = request.user;
     if (!email_verified) return reply.code(403).send({ error: "unverified" });
+
+    // Verify Pro entitlement — live signals are a paid feature
+    const entRows = await query<{ status: string }>(
+      `SELECT status FROM stripe_entitlements WHERE uid = $1 AND status = 'active' LIMIT 1`,
+      [uid]
+    );
+    if (!entRows.length) {
+      return reply.code(403).send({ error: "pro_required", message: "Live signals require a Pro subscription" });
+    }
 
     const rows = await query(
       `SELECT s.*, sl.status as live_status

@@ -12,10 +12,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [emailSent, setEmailSent] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
 
+  // Prevent search engine indexing of dashboard
+  useEffect(() => {
+    const meta = document.createElement("meta");
+    meta.name = "robots";
+    meta.content = "noindex, nofollow";
+    document.head.appendChild(meta);
+    return () => { document.head.removeChild(meta); };
+  }, []);
+
   // Redirect unauthenticated users
   useEffect(() => {
     if (!loading && !user) {
-      router.replace("/login");
+      router.replace("/auth");
     }
   }, [user, loading, router]);
 

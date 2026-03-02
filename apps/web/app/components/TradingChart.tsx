@@ -10,15 +10,16 @@ function TradingChartComponent({ symbol }: TradingChartProps) {
 
   useEffect(() => {
     if (!container.current) return;
+    const el = container.current;
 
-    // Clean up previous script if any
-    container.current.innerHTML = "";
+    // Clean up previous widget
+    el.innerHTML = "";
 
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
     script.type = "text/javascript";
     script.async = true;
-    script.innerHTML = JSON.stringify({
+    script.textContent = JSON.stringify({
       "autosize": true,
       "symbol": symbol,
       "interval": "5",
@@ -45,7 +46,8 @@ function TradingChartComponent({ symbol }: TradingChartProps) {
       "extended_hours": true
     });
 
-    container.current.appendChild(script);
+    el.appendChild(script);
+    return () => { el.innerHTML = ""; };
   }, [symbol]);
 
   return (

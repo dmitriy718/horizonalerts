@@ -1,5 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { getAllLessons } from "../lib/academy";
+
+export const metadata: Metadata = {
+  title: "Trading Academy",
+  description: "Free trading education covering technical analysis, risk management, market psychology, and algorithmic trading strategies. Learn institutional-grade concepts.",
+  openGraph: {
+    title: "Trading Academy | Nova by Horizon",
+    description: "Free trading education — technical analysis, risk management, and AI trading strategies.",
+  },
+};
 
 export default function AcademyPage() {
   const lessons = getAllLessons();

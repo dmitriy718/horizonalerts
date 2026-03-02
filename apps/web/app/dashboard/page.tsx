@@ -40,34 +40,24 @@ import {
   Percent,
   Crosshair,
   Check,
+  LineChart,
+  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/auth-context";
 import { getApiBaseUrl } from "../lib/api";
+import { TradingChart } from "../components/TradingChart";
+import { MiniChart } from "../components/MiniChart";
+import { ShareButton } from "../components/ShareButton";
 import Link from "next/link";
+import {
+  RANKS, ACHIEVEMENTS, getLevel, getXp, getXpForLevel, getRank, computeWinStreak,
+  type Achievement, type AchievementCtx,
+} from "../lib/gamification";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 type Tab = "overview" | "positions" | "trades" | "strategies" | "ai";
-
-type Achievement = {
-  id: string;
-  name: string;
-  desc: string;
-  icon: typeof Trophy;
-  color: string;
-  condition: (ctx: AchievementCtx) => boolean;
-};
-
-type AchievementCtx = {
-  totalTrades: number;
-  wins: number;
-  winRate: number;
-  bestStreak: number;
-  totalPnl: number;
-  strategies: number;
-  positions: number;
-};
 
 // ─── Formatters ──────────────────────────────────────────────────────────────
 
@@ -117,91 +107,14 @@ function duration(start: string, end?: string): string {
   return `${days}d ${hrs % 24}h`;
 }
 
-// ─── Gamification Logic ──────────────────────────────────────────────────────
-
-const RANKS = [
-  { name: "Recruit", min: 0, icon: Shield, color: "text-slate-400", bg: "bg-slate-500/10", border: "border-slate-500/20" },
-  { name: "Bronze", min: 2, icon: Award, color: "text-amber-600", bg: "bg-amber-600/10", border: "border-amber-600/20" },
-  { name: "Silver", min: 5, icon: Star, color: "text-slate-300", bg: "bg-slate-300/10", border: "border-slate-300/20" },
-  { name: "Gold", min: 10, icon: Trophy, color: "text-amber-400", bg: "bg-amber-400/10", border: "border-amber-400/20" },
-  { name: "Platinum", min: 20, icon: Gem, color: "text-cyan-400", bg: "bg-cyan-400/10", border: "border-cyan-400/20" },
-  { name: "Diamond", min: 35, icon: Crown, color: "text-purple-400", bg: "bg-purple-400/10", border: "border-purple-400/20" },
-];
-
-function getLevel(totalTrades: number): number {
-  return Math.floor(Math.sqrt(totalTrades)) + 1;
-}
-
-function getXp(totalTrades: number, wins: number): number {
-  return totalTrades * 10 + wins * 25;
-}
-
-function getXpForLevel(level: number): number {
-  return level * level * 35;
-}
-
-function getRank(level: number) {
-  let rank = RANKS[0];
-  for (const r of RANKS) {
-    if (level >= r.min) rank = r;
-  }
-  return rank;
-}
-
-function computeWinStreak(tradeList: any[]): { current: number; best: number } {
-  if (!tradeList.length) return { current: 0, best: 0 };
-
-  // Sort newest-first by exit_time
-  const sorted = [...tradeList].sort((a, b) => {
-    const ta = a.exit_time ? new Date(a.exit_time).getTime() : 0;
-    const tb = b.exit_time ? new Date(b.exit_time).getTime() : 0;
-    return tb - ta;
-  });
-
-  // Current streak from most recent trades
-  let current = 0;
-  for (const t of sorted) {
-    const pnl = t.pnl ?? t.realized_pnl ?? 0;
-    if (pnl > 0) current++;
-    else break;
-  }
-
-  // Best streak through all trades (oldest-first)
-  let best = current;
-  let streak = 0;
-  for (const t of [...sorted].reverse()) {
-    const pnl = t.pnl ?? t.realized_pnl ?? 0;
-    if (pnl > 0) {
-      streak++;
-      best = Math.max(best, streak);
-    } else {
-      streak = 0;
-    }
-  }
-  return { current, best };
-}
-
-const ACHIEVEMENTS: Achievement[] = [
-  { id: "first_trade", name: "First Blood", desc: "Execute your first trade", icon: Crosshair, color: "text-cyan-400", condition: (c) => c.totalTrades >= 1 },
-  { id: "ten_trades", name: "Getting Warmed Up", desc: "Complete 10 trades", icon: Activity, color: "text-blue-400", condition: (c) => c.totalTrades >= 10 },
-  { id: "fifty_trades", name: "Battle-Tested", desc: "Complete 50 trades", icon: Shield, color: "text-purple-400", condition: (c) => c.totalTrades >= 50 },
-  { id: "hundred_trades", name: "Centurion", desc: "Complete 100 trades", icon: Crown, color: "text-amber-400", condition: (c) => c.totalTrades >= 100 },
-  { id: "streak_3", name: "Hot Hand", desc: "Win 3 trades in a row", icon: Flame, color: "text-orange-400", condition: (c) => c.bestStreak >= 3 },
-  { id: "streak_5", name: "On Fire", desc: "Win 5 trades in a row", icon: Zap, color: "text-amber-400", condition: (c) => c.bestStreak >= 5 },
-  { id: "streak_10", name: "Untouchable", desc: "Win 10 trades in a row", icon: Star, color: "text-yellow-400", condition: (c) => c.bestStreak >= 10 },
-  { id: "win_rate_60", name: "Sharp Shooter", desc: "Reach 60% win rate", icon: Target, color: "text-emerald-400", condition: (c) => c.winRate >= 60 && c.totalTrades >= 10 },
-  { id: "win_rate_70", name: "Sniper", desc: "Reach 70% win rate", icon: Eye, color: "text-cyan-400", condition: (c) => c.winRate >= 70 && c.totalTrades >= 20 },
-  { id: "profit_100", name: "First Bag", desc: "Earn $100+ total profit", icon: DollarSign, color: "text-emerald-400", condition: (c) => c.totalPnl >= 100 },
-  { id: "profit_1k", name: "Comma Club", desc: "Earn $1,000+ total profit", icon: Trophy, color: "text-amber-400", condition: (c) => c.totalPnl >= 1000 },
-  { id: "multi_strat", name: "Diversified", desc: "Profit from 3+ strategies", icon: Layers, color: "text-purple-400", condition: (c) => c.strategies >= 3 },
-];
+// Gamification logic imported from ../lib/gamification
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
-  const [connected, setConnected] = useState<boolean | null>(null);
+  const [connected, setConnected] = useState<'loading' | 'connected' | 'disconnected' | 'error'>('loading');
   const [botStatus, setBotStatus] = useState<any>(null);
   const [performance, setPerformance] = useState<any>(null);
   const [positions, setPositions] = useState<any[]>([]);
@@ -210,6 +123,9 @@ export default function DashboardPage() {
   const [risk, setRisk] = useState<any>(null);
   const [thoughts, setThoughts] = useState<any[]>([]);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+
+  // Chart modal state
+  const [chartSymbol, setChartSymbol] = useState<string | null>(null);
 
   // Inline bot connection state
   const [setupStep, setSetupStep] = useState(0); // 0=choice, 1=form
@@ -233,7 +149,7 @@ export default function DashboardPage() {
       if (res.status === 404) return null;
       if (res.status === 401) {
         router.replace("/login");
-        return null;
+        throw new Error("Unauthorized");
       }
       if (!res.ok) throw new Error(`${res.status}`);
       return res.json();
@@ -244,8 +160,15 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!user) return;
     apiFetch("/connection")
-      .then((data) => setConnected(data !== null))
-      .catch(() => setConnected(false));
+      .then((data) => setConnected(data !== null ? 'connected' : 'disconnected'))
+      .catch((err) => {
+        // 404 = no bot configured → show wizard; other errors → show error banner
+        if (err.message?.includes("404")) {
+          setConnected('disconnected');
+        } else {
+          setConnected('error');
+        }
+      });
   }, [user, apiFetch]);
 
   const handleInlineConnect = async (e: React.FormEvent) => {
@@ -256,7 +179,7 @@ export default function DashboardPage() {
       const res = await fetch(`${getApiBaseUrl()}/bot/connection`, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${await user!.getIdToken()}`,
+          Authorization: `Bearer ${await user?.getIdToken()}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -276,7 +199,7 @@ export default function DashboardPage() {
         }
         throw new Error(msg);
       }
-      setConnected(true);
+      setConnected('connected');
     } catch (err: any) {
       setSetupError(err.message || "Connection failed");
     } finally {
@@ -284,18 +207,19 @@ export default function DashboardPage() {
     }
   };
 
-  const failCountRef = useRef(0);
+  const fastFailRef = useRef(0);
+  const slowFailRef = useRef(0);
 
   useEffect(() => {
-    if (!user || connected === false || connected === null) return;
+    if (!user || connected !== 'connected') return;
 
     let fastTimer: ReturnType<typeof setTimeout>;
     let slowTimer: ReturnType<typeof setTimeout>;
     let cancelled = false;
 
-    const getBackoffMs = (baseMs: number) => {
-      if (failCountRef.current === 0) return baseMs;
-      return Math.min(baseMs * Math.pow(2, failCountRef.current), 60000);
+    const getBackoffMs = (baseMs: number, failCount: number) => {
+      if (failCount === 0) return baseMs;
+      return Math.min(baseMs * Math.pow(2, failCount), 60000);
     };
 
     const fetchFast = async () => {
@@ -310,12 +234,16 @@ export default function DashboardPage() {
         if (pos) setPositions(Array.isArray(pos) ? pos : pos?.positions || pos?.open_positions || []);
         if (status) setBotStatus(status);
         setLastUpdate(new Date());
-        failCountRef.current = 0;
-      } catch (e) {
-        failCountRef.current = Math.min(failCountRef.current + 1, 5);
+        fastFailRef.current = 0;
+      } catch (e: any) {
+        if (e?.message === "Unauthorized") {
+          cancelled = true;
+          return;
+        }
+        fastFailRef.current = Math.min(fastFailRef.current + 1, 5);
         console.error("fast poll error", e);
       }
-      if (!cancelled) fastTimer = setTimeout(fetchFast, getBackoffMs(5000));
+      if (!cancelled) fastTimer = setTimeout(fetchFast, getBackoffMs(5000, fastFailRef.current));
     };
 
     const fetchSlow = async () => {
@@ -331,10 +259,16 @@ export default function DashboardPage() {
         if (strat) setStrategies(strat);
         if (rsk) setRisk(rsk);
         if (th) setThoughts(Array.isArray(th) ? th : th?.thoughts || []);
-      } catch (e) {
+        slowFailRef.current = 0;
+      } catch (e: any) {
+        if (e?.message === "Unauthorized") {
+          cancelled = true;
+          return;
+        }
+        slowFailRef.current = Math.min(slowFailRef.current + 1, 5);
         console.error("slow poll error", e);
       }
-      if (!cancelled) slowTimer = setTimeout(fetchSlow, getBackoffMs(15000));
+      if (!cancelled) slowTimer = setTimeout(fetchSlow, getBackoffMs(15000, slowFailRef.current));
     };
 
     fetchFast();
@@ -370,7 +304,7 @@ export default function DashboardPage() {
   }, [strategies]);
 
   const profitableStrategies = stratList.filter(
-    (s) => (s.total_pnl ?? s.pnl ?? s.cumulative_pnl ?? 0) > 0
+    (s) => s.kind !== "filter" && s.kind !== "model" && (s.total_pnl ?? s.pnl ?? s.cumulative_pnl ?? 0) > 0
   ).length;
 
   const streaks = useMemo(() => computeWinStreak(trades), [trades]);
@@ -400,15 +334,44 @@ export default function DashboardPage() {
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "positions", label: "Positions", icon: List, badge: positions.length > 0 ? `${positions.length}` : undefined },
     { id: "trades", label: "Trades", icon: History, badge: trades.length > 0 ? `${trades.length}` : undefined },
-    { id: "strategies", label: "Strategies", icon: Layers },
+    { id: "strategies", label: "Strategies", icon: Layers, badge: (() => { const c = stratList.filter((s: any) => s.kind !== "filter" && s.kind !== "model").length; return c > 0 ? `${c}` : undefined; })() },
     { id: "ai", label: "AI Feed", icon: Brain },
   ];
 
-  const isTrading = botStatus?.trading_active || botStatus?.is_running;
+  const isTrading = botStatus?.status === "running" && !botStatus?.paused;
+
+  // ─── API Error state ───────────────────────────────────────────────────────
+
+  if (connected === 'error') {
+    return (
+      <div className="min-h-screen pt-28 pb-20">
+        <div className="mx-auto max-w-3xl px-6">
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-8 text-center">
+            <ShieldAlert size={36} className="mx-auto mb-4 text-red-400" />
+            <h2 className="text-xl font-bold text-white mb-2">Connection Error</h2>
+            <p className="text-sm text-slate-400 mb-6">
+              We could not reach the API. This may be a temporary issue. Please try again shortly.
+            </p>
+            <button
+              onClick={() => {
+                setConnected('loading');
+                apiFetch("/connection")
+                  .then((data) => setConnected(data !== null ? 'connected' : 'disconnected'))
+                  .catch(() => setConnected('error'));
+              }}
+              className="inline-flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-6 py-3 text-sm font-bold text-white hover:bg-white/10 transition-all"
+            >
+              <RefreshCw size={16} /> Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ─── Not connected ─────────────────────────────────────────────────────────
 
-  if (connected === false) {
+  if (connected === 'disconnected') {
     return (
       <div className="min-h-screen pt-28 pb-20">
         <div className="mx-auto max-w-3xl px-6">
@@ -591,7 +554,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (connected === null) {
+  if (connected === 'loading') {
     return (
       <div className="min-h-screen pt-28 pb-20 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
@@ -628,6 +591,12 @@ export default function DashboardPage() {
                 <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${rank.bg} ${rank.color} border ${rank.border}`}>
                   {rank.name}
                 </span>
+                <div className="ml-auto shrink-0">
+                  <ShareButton
+                    text={`\u{1F4C8} Trading with Nova by Horizon!\nTotal P&L: ${fmtUsd(totalPnl)} | Win Rate: ${winRateNorm.toFixed(0)}% | ${totalTrades} trades\nRank: ${rank.name} | Level ${level}\nStart trading \u2192 horizonsvc.com`}
+                    url="https://horizonsvc.com"
+                  />
+                </div>
               </div>
 
               {/* XP Bar */}
@@ -814,44 +783,75 @@ export default function DashboardPage() {
                   <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
                     <Layers size={14} className="text-cyan-400" /> Strategy Performance
                   </h3>
-                  {stratList.length === 0 ? (
-                    <div className="rounded-2xl border border-white/5 bg-slate-900/20 p-8 text-center text-sm text-slate-500">
-                      Strategy data will appear after the bot executes trades.
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {stratList.map((s: any, i: number) => {
-                        const wr = s.win_rate ?? s.winRate ?? 0;
-                        const wrNorm = wr < 1 && wr > 0 ? wr * 100 : wr;
-                        const pnl = s.total_pnl ?? s.pnl ?? s.cumulative_pnl ?? 0;
-                        const count = s.total_trades ?? s.trade_count ?? s.trades ?? 0;
-                        return (
-                          <div
-                            key={s.name || s.strategy || i}
-                            className="group flex items-center gap-4 rounded-xl border border-white/5 bg-slate-900/20 px-5 py-3.5 transition-all hover:border-white/10 hover:bg-slate-900/40"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-1.5">
-                                <span className="text-sm font-bold text-white capitalize truncate">{s.name || s.strategy}</span>
-                                <span className={`text-sm font-mono font-bold ${pnlColor(pnl)}`}>{fmtUsd(pnl)}</span>
-                              </div>
-                              <div className="h-1 w-full rounded-full bg-slate-800 overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full transition-all duration-500 ${pnl >= 0 ? "bg-emerald-500" : "bg-red-500"}`}
-                                  style={{ width: `${Math.min(wrNorm, 100)}%` }}
-                                />
-                              </div>
-                              <div className="flex gap-4 mt-1.5 text-[10px] text-slate-500">
-                                <span>WR: {wrNorm.toFixed(0)}%</span>
-                                <span>Trades: {count}</span>
-                                {s.sharpe != null && <span>Sharpe: {fmt(s.sharpe)}</span>}
+                  {(() => {
+                    const activeStrats = stratList.filter((s: any) => s.kind !== "filter" && s.kind !== "model");
+                    return activeStrats.length === 0 ? (
+                      <div className="rounded-2xl border border-white/5 bg-slate-900/20 p-8 text-center text-sm text-slate-500">
+                        Strategy data will appear after the bot executes trades.
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {activeStrats.map((s: any, i: number) => {
+                          const wr = s.win_rate ?? s.winRate ?? 0;
+                          const wrNorm = wr < 1 && wr > 0 ? wr * 100 : wr;
+                          const pnl = s.total_pnl ?? s.pnl ?? s.cumulative_pnl ?? 0;
+                          const count = s.total_trades ?? s.trade_count ?? s.trades ?? 0;
+                          const weight = s.weight ?? s.adaptive_weight;
+                          const stratName = (s.name || s.strategy || "").replace(/_/g, " ");
+                          const hasTrades = count > 0;
+                          return (
+                            <div
+                              key={s.name || s.strategy || i}
+                              className={`group flex items-center gap-4 rounded-xl border px-5 py-3.5 transition-all hover:bg-slate-900/40 ${
+                                hasTrades
+                                  ? `${pnl >= 0 ? "border-emerald-500/20 bg-slate-900/30 shadow-[0_0_12px_rgba(16,185,129,0.06)]" : "border-red-500/20 bg-slate-900/30 shadow-[0_0_12px_rgba(239,68,68,0.06)]"} hover:border-white/15`
+                                  : "border-white/5 bg-slate-900/15 hover:border-white/10"
+                              }`}
+                            >
+                              {/* Status indicator */}
+                              <span className="relative flex h-2 w-2 shrink-0">
+                                {hasTrades ? (
+                                  <>
+                                    <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-50 ${pnl >= 0 ? "bg-emerald-400" : "bg-red-400"}`} />
+                                    <span className={`relative inline-flex h-2 w-2 rounded-full ${pnl >= 0 ? "bg-emerald-500" : "bg-red-500"}`} />
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="absolute inline-flex h-full w-full animate-pulse rounded-full bg-cyan-400 opacity-40" />
+                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-500/60" />
+                                  </>
+                                )}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <span className={`text-sm font-bold capitalize truncate ${hasTrades ? "text-white" : "text-slate-400"}`}>{stratName}</span>
+                                  {hasTrades ? (
+                                    <span className={`text-sm font-mono font-bold ${pnlColor(pnl)}`}>{fmtUsd(pnl)}</span>
+                                  ) : (
+                                    <span className="text-[10px] font-semibold text-cyan-500/70 uppercase tracking-wider">Scanning</span>
+                                  )}
+                                </div>
+                                {hasTrades && (
+                                  <div className="h-1 w-full rounded-full bg-slate-800 overflow-hidden">
+                                    <div
+                                      className={`h-full rounded-full transition-all duration-500 ${pnl >= 0 ? "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.4)]" : "bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.4)]"}`}
+                                      style={{ width: `${Math.min(wrNorm, 100)}%` }}
+                                    />
+                                  </div>
+                                )}
+                                <div className="flex gap-4 mt-1.5 text-[10px] text-slate-500">
+                                  {hasTrades && <span>WR: {wrNorm.toFixed(0)}%</span>}
+                                  {hasTrades && <span>Trades: {count}</span>}
+                                  {weight != null && weight > 0 && <span>Weight: {(weight * 100).toFixed(0)}%</span>}
+                                  {s.sharpe != null && <span>Sharpe: {fmt(s.sharpe)}</span>}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Achievements Panel */}
@@ -893,6 +893,32 @@ export default function DashboardPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+
+              {/* Market Overview Mini Charts */}
+              <div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 mb-4 flex items-center gap-2">
+                  <LineChart size={14} className="text-cyan-400" /> Market Overview
+                </h3>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {[
+                    { symbol: "KRAKEN:BTCUSD", label: "Bitcoin" },
+                    { symbol: "KRAKEN:ETHUSD", label: "Ethereum" },
+                    { symbol: "AMEX:SPY", label: "S&P 500" },
+                  ].map((m) => (
+                    <button
+                      key={m.symbol}
+                      onClick={() => setChartSymbol(m.symbol)}
+                      className="rounded-2xl border border-white/5 bg-slate-900/30 p-3 transition-all hover:border-white/10 hover:bg-slate-900/50 text-left"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-bold text-white">{m.label}</span>
+                        <LineChart size={12} className="text-slate-600" />
+                      </div>
+                      <MiniChart symbol={m.symbol} />
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -979,14 +1005,32 @@ export default function DashboardPage() {
                             </div>
                           </div>
 
-                          {/* Right: P&L + Duration */}
-                          <div className="text-right">
-                            <div className={`text-lg font-extrabold ${pnlColor(unrealizedPnl)}`}>{fmtUsd(unrealizedPnl)}</div>
-                            {p.entry_time && (
-                              <div className="text-xs text-slate-500 flex items-center justify-end gap-1">
-                                <Clock size={10} /> {duration(p.entry_time)}
-                              </div>
-                            )}
+                          {/* Right: P&L + Duration + Chart */}
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <div className={`text-lg font-extrabold ${pnlColor(unrealizedPnl)}`}>{fmtUsd(unrealizedPnl)}</div>
+                              {p.entry_time && (
+                                <div className="text-xs text-slate-500 flex items-center justify-end gap-1">
+                                  <Clock size={10} /> {duration(p.entry_time)}
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => {
+                                const sym = p.pair || p.symbol || "";
+                                // Convert crypto pairs to TradingView format
+                                const tvSymbol = sym.includes("/")
+                                  ? `KRAKEN:${sym.replace("/", "")}`
+                                  : sym.includes("-")
+                                    ? `COINBASE:${sym.replace("-", "")}`
+                                    : sym;
+                                setChartSymbol(tvSymbol);
+                              }}
+                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 border border-white/10 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/20 hover:bg-cyan-500/5 transition-all"
+                              title="View chart"
+                            >
+                              <LineChart size={14} />
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -1022,8 +1066,33 @@ export default function DashboardPage() {
                       <Star size={16} className="text-amber-400" />
                       <span className="text-sm font-bold text-amber-400">Best: {streaks.best}</span>
                     </div>
-                    <div className="text-xs text-slate-500 ml-auto">
-                      Showing last {trades.length} trades
+                    <div className="flex items-center gap-3 text-xs text-slate-500 ml-auto">
+                      <span>Showing last {trades.length} trades</span>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const token = await user?.getIdToken();
+                            const res = await fetch(`${getApiBaseUrl()}/bot/trades/csv?limit=100`, {
+                              headers: { Authorization: `Bearer ${token}` },
+                            });
+                            if (!res.ok) throw new Error("Export failed");
+                            const blob = await res.blob();
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = `trades-${new Date().toISOString().slice(0, 10)}.csv`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            setTimeout(() => URL.revokeObjectURL(url), 100);
+                          } catch (e) {
+                            console.error("CSV export failed", e);
+                          }
+                        }}
+                        className="flex items-center gap-1.5 rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+                      >
+                        <ArrowDownRight size={12} /> Export CSV
+                      </button>
                     </div>
                   </div>
 
@@ -1092,74 +1161,175 @@ export default function DashboardPage() {
                   <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-slate-900/50 border border-white/5">
                     <Layers size={36} className="opacity-30" />
                   </div>
-                  <p className="text-lg font-semibold text-slate-400 mb-2">No strategy data yet</p>
-                  <p className="text-sm text-slate-500">Strategy performance will populate as your bot executes trades.</p>
+                  <p className="text-lg font-semibold text-slate-400 mb-2">Connecting to bot</p>
+                  <p className="text-sm text-slate-500">Strategy data will appear once the bot connection is established.</p>
                 </div>
-              ) : (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {stratList.map((s: any, i: number) => {
-                    const wr = s.win_rate ?? s.winRate ?? 0;
-                    const wrNorm = wr < 1 && wr > 0 ? wr * 100 : wr;
-                    const pnl = s.total_pnl ?? s.pnl ?? s.cumulative_pnl ?? 0;
-                    const count = s.total_trades ?? s.trade_count ?? s.trades ?? 0;
-                    const isProfit = pnl >= 0;
-                    return (
-                      <div
-                        key={s.name || s.strategy || i}
-                        className={`group rounded-2xl border p-6 transition-all hover:bg-slate-900/50 ${
-                          isProfit ? "border-emerald-500/10 bg-slate-900/30 hover:border-emerald-500/20" : "border-red-500/10 bg-slate-900/30 hover:border-red-500/20"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-5">
-                          <h3 className="text-base font-bold text-white capitalize">{s.name || s.strategy}</h3>
-                          <div className={`rounded-lg px-3 py-1 text-xs font-bold ${isProfit ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
-                            {fmtUsd(pnl)}
-                          </div>
-                        </div>
+              ) : (() => {
+                // Separate active strategies from filters/models
+                const activeStrats = stratList.filter((s: any) => s.kind !== "filter" && s.kind !== "model");
+                const filters = stratList.filter((s: any) => s.kind === "filter" || s.kind === "model");
+                return (
+                  <div className="space-y-8">
+                    {/* Strategy cards */}
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {activeStrats.map((s: any, i: number) => {
+                        const wr = s.win_rate ?? s.winRate ?? 0;
+                        const wrNorm = wr < 1 && wr > 0 ? wr * 100 : wr;
+                        const pnl = s.total_pnl ?? s.pnl ?? s.cumulative_pnl ?? 0;
+                        const count = s.total_trades ?? s.trade_count ?? s.trades ?? 0;
+                        const hasTrades = count > 0;
+                        const isProfit = pnl >= 0;
+                        const isEnabled = s.enabled !== false;
+                        const weight = s.weight ?? s.adaptive_weight;
+                        const stratName = (s.name || s.strategy || "").replace(/_/g, " ");
+                        return (
+                          <div
+                            key={s.name || s.strategy || i}
+                            className={`group rounded-2xl border p-6 transition-all ${
+                              !isEnabled ? "border-white/5 bg-slate-900/20 opacity-60" :
+                              hasTrades && isProfit ? "border-emerald-500/20 bg-slate-900/30 shadow-[0_0_20px_rgba(16,185,129,0.08)] hover:border-emerald-500/30 hover:shadow-[0_0_30px_rgba(16,185,129,0.12)]" :
+                              hasTrades && !isProfit ? "border-red-500/20 bg-slate-900/30 shadow-[0_0_20px_rgba(239,68,68,0.08)] hover:border-red-500/30 hover:shadow-[0_0_30px_rgba(239,68,68,0.12)]" :
+                              "border-white/[0.06] bg-slate-900/20 hover:border-cyan-500/15 hover:bg-slate-900/30"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-4">
+                              <div className="flex items-center gap-2 min-w-0">
+                                {/* Status dot */}
+                                <span className="relative flex h-2.5 w-2.5 shrink-0">
+                                  {hasTrades ? (
+                                    <>
+                                      <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-50 ${isProfit ? "bg-emerald-400" : "bg-red-400"}`} />
+                                      <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${isProfit ? "bg-emerald-500" : "bg-red-500"}`} />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className="absolute inline-flex h-full w-full animate-pulse rounded-full bg-cyan-400 opacity-40" />
+                                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan-500/50" />
+                                    </>
+                                  )}
+                                </span>
+                                <h3 className={`text-base font-bold capitalize truncate ${hasTrades ? "text-white" : "text-slate-400"}`}>{stratName}</h3>
+                                {!isEnabled && (
+                                  <span className="shrink-0 rounded-md bg-slate-700/50 px-1.5 py-0.5 text-[9px] font-bold text-slate-500 uppercase">Off</span>
+                                )}
+                              </div>
+                              {hasTrades ? (
+                                <div className={`shrink-0 rounded-lg px-3 py-1 text-xs font-bold ${isProfit ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"}`}>
+                                  {fmtUsd(pnl)}
+                                </div>
+                              ) : (
+                                <div className="shrink-0 rounded-lg px-3 py-1 text-[10px] font-bold bg-cyan-500/10 text-cyan-400/70 uppercase tracking-wider">
+                                  Scanning
+                                </div>
+                              )}
+                            </div>
 
-                        {/* Win rate meter */}
-                        <div className="mb-4">
-                          <div className="flex items-center justify-between text-xs mb-1.5">
-                            <span className="text-slate-500">Win Rate</span>
-                            <span className="font-mono font-bold text-white">{wrNorm.toFixed(1)}%</span>
-                          </div>
-                          <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
-                            <div
-                              className={`h-full rounded-full transition-all duration-700 ${isProfit ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]" : "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.4)]"}`}
-                              style={{ width: `${Math.min(wrNorm, 100)}%` }}
-                            />
-                          </div>
-                        </div>
+                            {/* Weight badge */}
+                            {weight != null && weight > 0 && (
+                              <div className="mb-3 flex items-center gap-2">
+                                <span className="text-[10px] text-slate-500">Weight</span>
+                                <div className="flex-1 h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                                  <div className={`h-full rounded-full ${hasTrades ? "bg-cyan-500/60" : "bg-cyan-500/30"}`} style={{ width: `${Math.min(weight * 100, 100)}%` }} />
+                                </div>
+                                <span className={`text-[10px] font-mono font-bold ${hasTrades ? "text-cyan-400" : "text-cyan-500/50"}`}>{(weight * 100).toFixed(0)}%</span>
+                              </div>
+                            )}
 
-                        <div className="grid grid-cols-2 gap-3 text-xs">
-                          <div className="rounded-lg bg-white/[0.02] border border-white/5 p-2.5">
-                            <div className="text-slate-500">Trades</div>
-                            <div className="font-mono font-bold text-white mt-0.5">{count}</div>
+                            {/* Win rate meter (only if there are trades) */}
+                            {hasTrades ? (
+                              <div className="mb-4">
+                                <div className="flex items-center justify-between text-xs mb-1.5">
+                                  <span className="text-slate-500">Win Rate</span>
+                                  <span className="font-mono font-bold text-white">{wrNorm.toFixed(1)}%</span>
+                                </div>
+                                <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-700 ${isProfit ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)]" : "bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.4)]"}`}
+                                    style={{ width: `${Math.min(wrNorm, 100)}%` }}
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="mb-4 flex items-center gap-2 text-[10px] text-slate-500">
+                                <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400/40" /><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-cyan-500/30" /></span>
+                                Actively scanning for entry signals
+                              </div>
+                            )}
+
+                            <div className="grid grid-cols-2 gap-3 text-xs">
+                              <div className="rounded-lg bg-white/[0.02] border border-white/5 p-2.5">
+                                <div className="text-slate-500">Trades</div>
+                                <div className={`font-mono font-bold mt-0.5 ${hasTrades ? "text-white" : "text-slate-600"}`}>{count}</div>
+                              </div>
+                              {s.avg_pnl != null && (
+                                <div className="rounded-lg bg-white/[0.02] border border-white/5 p-2.5">
+                                  <div className="text-slate-500">Avg P&L</div>
+                                  <div className={`font-mono font-bold mt-0.5 ${pnlColor(s.avg_pnl)}`}>{fmtUsd(s.avg_pnl)}</div>
+                                </div>
+                              )}
+                              {s.sharpe != null && (
+                                <div className="rounded-lg bg-white/[0.02] border border-white/5 p-2.5">
+                                  <div className="text-slate-500">Sharpe</div>
+                                  <div className="font-mono font-bold text-white mt-0.5">{fmt(s.sharpe)}</div>
+                                </div>
+                              )}
+                              {s.max_drawdown != null && (
+                                <div className="rounded-lg bg-white/[0.02] border border-white/5 p-2.5">
+                                  <div className="text-slate-500">Drawdown</div>
+                                  <div className="font-mono font-bold text-red-400 mt-0.5">{Math.abs(s.max_drawdown).toFixed(2)}%</div>
+                                </div>
+                              )}
+                              {s.exchange && (
+                                <div className="rounded-lg bg-white/[0.02] border border-white/5 p-2.5">
+                                  <div className="text-slate-500">Exchange</div>
+                                  <div className="font-mono font-bold text-slate-300 mt-0.5 capitalize">{s.exchange}</div>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          {s.avg_pnl != null && (
-                            <div className="rounded-lg bg-white/[0.02] border border-white/5 p-2.5">
-                              <div className="text-slate-500">Avg P&L</div>
-                              <div className={`font-mono font-bold mt-0.5 ${pnlColor(s.avg_pnl)}`}>{fmtUsd(s.avg_pnl)}</div>
-                            </div>
-                          )}
-                          {s.sharpe != null && (
-                            <div className="rounded-lg bg-white/[0.02] border border-white/5 p-2.5">
-                              <div className="text-slate-500">Sharpe</div>
-                              <div className="font-mono font-bold text-white mt-0.5">{fmt(s.sharpe)}</div>
-                            </div>
-                          )}
-                          {s.max_drawdown != null && (
-                            <div className="rounded-lg bg-white/[0.02] border border-white/5 p-2.5">
-                              <div className="text-slate-500">Drawdown</div>
-                              <div className="font-mono font-bold text-red-400 mt-0.5">{Math.abs(s.max_drawdown).toFixed(2)}%</div>
-                            </div>
-                          )}
+                        );
+                      })}
+                    </div>
+
+                    {/* Filters & Models section */}
+                    {filters.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <Shield size={14} className="text-slate-500" />
+                          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Filters & Models</span>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          {filters.map((s: any, i: number) => {
+                            const isEnabled = s.enabled !== false;
+                            const stratName = (s.name || s.strategy || "").replace(/_/g, " ");
+                            return (
+                              <div
+                                key={s.name || i}
+                                className={`rounded-xl border p-4 transition-all ${
+                                  isEnabled ? "border-white/10 bg-slate-900/30" : "border-white/5 bg-slate-900/20 opacity-50"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`inline-block h-2 w-2 rounded-full ${isEnabled ? "bg-emerald-400" : "bg-slate-600"}`} />
+                                    <span className="text-sm font-bold text-white capitalize">{stratName}</span>
+                                  </div>
+                                  <span className={`rounded-md px-2 py-0.5 text-[9px] font-bold uppercase ${
+                                    s.kind === "model" ? "bg-purple-500/10 text-purple-400 border border-purple-500/20" : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                                  }`}>
+                                    {s.kind}
+                                  </span>
+                                </div>
+                                {s.note && <p className="mt-1.5 text-[11px] text-slate-500">{s.note}</p>}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -1183,42 +1353,132 @@ export default function DashboardPage() {
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-purple-400 opacity-75" />
                       <span className="relative inline-flex h-2 w-2 rounded-full bg-purple-500" />
                     </span>
+                    <span className="ml-auto text-[10px] text-slate-600">{thoughts.length} entries</span>
                   </div>
-                  {thoughts.map((t: any, i: number) => (
-                    <div
-                      key={t.id || i}
-                      className="rounded-xl border border-white/5 bg-slate-900/30 p-4 border-l-4 border-l-purple-500/40 transition-all hover:bg-slate-900/50"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <p className="text-sm text-slate-300 leading-relaxed">
-                          {t.thought || t.message || t.text}
-                        </p>
-                        <span className="text-[10px] text-slate-600 whitespace-nowrap shrink-0">
-                          {t.timestamp ? new Date(t.timestamp).toLocaleTimeString() : ""}
-                        </span>
-                      </div>
-                      {(t.strategy || t.category) && (
-                        <div className="mt-2.5 flex gap-2">
-                          {t.strategy && (
-                            <span className="rounded-md bg-purple-500/15 px-2.5 py-0.5 text-[10px] font-bold text-purple-400 border border-purple-500/20">
-                              {t.strategy}
-                            </span>
-                          )}
-                          {t.category && (
-                            <span className="rounded-md bg-slate-700/50 px-2.5 py-0.5 text-[10px] font-bold text-slate-400 border border-white/5">
-                              {t.category}
-                            </span>
-                          )}
+                  {thoughts.map((t: any, i: number) => {
+                    const cat = (t.category || "").toLowerCase();
+                    const sev = (t.severity || "info").toLowerCase();
+                    // Category color map
+                    const catStyle: Record<string, { bg: string; text: string; border: string; borderL: string }> = {
+                      system:   { bg: "bg-blue-500/10",    text: "text-blue-400",    border: "border-blue-500/20",    borderL: "border-l-blue-500/60" },
+                      trade:    { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20", borderL: "border-l-emerald-500/60" },
+                      risk:     { bg: "bg-red-500/10",     text: "text-red-400",     border: "border-red-500/20",     borderL: "border-l-red-500/60" },
+                      analysis: { bg: "bg-purple-500/10",  text: "text-purple-400",  border: "border-purple-500/20",  borderL: "border-l-purple-500/60" },
+                      signal:   { bg: "bg-cyan-500/10",    text: "text-cyan-400",    border: "border-cyan-500/20",    borderL: "border-l-cyan-500/60" },
+                      market:   { bg: "bg-indigo-500/10",  text: "text-indigo-400",  border: "border-indigo-500/20",  borderL: "border-l-indigo-500/60" },
+                      ml:       { bg: "bg-violet-500/10",  text: "text-violet-400",  border: "border-violet-500/20",  borderL: "border-l-violet-500/60" },
+                      exit:     { bg: "bg-amber-500/10",   text: "text-amber-400",   border: "border-amber-500/20",   borderL: "border-l-amber-500/60" },
+                      entry:    { bg: "bg-teal-500/10",    text: "text-teal-400",    border: "border-teal-500/20",    borderL: "border-l-teal-500/60" },
+                      engine:   { bg: "bg-orange-500/10",  text: "text-orange-400",  border: "border-orange-500/20",  borderL: "border-l-orange-500/60" },
+                    };
+                    const cs = catStyle[cat] || { bg: "bg-slate-500/10", text: "text-slate-400", border: "border-white/5", borderL: "border-l-slate-500/40" };
+                    // Severity indicator
+                    const sevStyle: Record<string, { dot: string; label: string }> = {
+                      debug:    { dot: "bg-slate-500",   label: "DEBUG" },
+                      info:     { dot: "bg-blue-400",    label: "" },
+                      warning:  { dot: "bg-amber-400",   label: "WARN" },
+                      error:    { dot: "bg-red-500",     label: "ERROR" },
+                      critical: { dot: "bg-red-600 animate-pulse", label: "CRITICAL" },
+                    };
+                    const ss = sevStyle[sev] || sevStyle.info;
+                    const msg = t.thought || t.message || t.text || "";
+
+                    return (
+                      <div
+                        key={t.id || i}
+                        className={`rounded-xl border border-white/5 bg-slate-900/30 p-4 border-l-4 ${cs.borderL} transition-all hover:bg-slate-900/50 ${
+                          sev === "error" || sev === "critical" ? "ring-1 ring-red-500/10" : ""
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            {/* Category + severity + time row */}
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                              {t.category && (
+                                <span className={`inline-flex items-center gap-1 rounded-md ${cs.bg} px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${cs.text} border ${cs.border}`}>
+                                  <span className={`inline-block h-1.5 w-1.5 rounded-full ${ss.dot}`} />
+                                  {t.category}
+                                </span>
+                              )}
+                              {t.strategy && (
+                                <span className="rounded-md bg-white/5 px-2 py-0.5 text-[10px] font-bold text-slate-300 border border-white/10 capitalize">
+                                  {t.strategy}
+                                </span>
+                              )}
+                              {t.exchange && (
+                                <span className="rounded-md bg-slate-800/80 px-2 py-0.5 text-[10px] font-medium text-slate-500 border border-white/5">
+                                  {t.exchange}
+                                </span>
+                              )}
+                              {ss.label && (
+                                <span className={`text-[9px] font-black tracking-widest ${sev === "critical" ? "text-red-500 animate-pulse" : sev === "error" ? "text-red-400" : "text-amber-400"}`}>
+                                  {ss.label}
+                                </span>
+                              )}
+                              <span className="ml-auto text-[10px] text-slate-600 whitespace-nowrap shrink-0 tabular-nums">
+                                {t.timestamp ? new Date(t.timestamp).toLocaleTimeString() : ""}
+                              </span>
+                            </div>
+                            {/* Message */}
+                            <p className={`text-sm leading-relaxed ${
+                              sev === "error" || sev === "critical" ? "text-red-300" : sev === "warning" ? "text-amber-200/80" : "text-slate-300"
+                            }`}>
+                              {msg}
+                            </p>
+                            {/* Metadata preview */}
+                            {t.metadata && typeof t.metadata === "object" && Object.keys(t.metadata).length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                                {Object.entries(t.metadata).slice(0, 6).map(([k, v]) => (
+                                  <span key={k} className="text-[10px] text-slate-500">
+                                    <span className="text-slate-600">{k}:</span>{" "}
+                                    <span className="font-mono text-slate-400">{typeof v === "number" ? fmt(v) : String(v)}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  ))}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
           )}
         </div>
       </div>
+
+      {/* ═══════════════ CHART MODAL ═══════════════ */}
+      {chartSymbol && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => setChartSymbol(null)}
+          onKeyDown={(e) => { if (e.key === "Escape") setChartSymbol(null); }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Chart detail"
+          tabIndex={-1}
+        >
+          <div className="relative w-full max-w-6xl h-[80vh] rounded-2xl border border-white/10 bg-slate-950 shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-slate-900/50">
+              <div className="flex items-center gap-3">
+                <LineChart size={16} className="text-cyan-400" />
+                <span className="text-sm font-bold text-white">{chartSymbol}</span>
+                <span className="text-[10px] text-slate-500">5m | Heikin Ashi</span>
+              </div>
+              <button
+                onClick={() => setChartSymbol(null)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div className="h-[calc(100%-48px)]">
+              <TradingChart symbol={chartSymbol} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
