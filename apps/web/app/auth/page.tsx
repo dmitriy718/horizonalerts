@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { getFirebaseAuth } from "../lib/firebase";
-import { ChevronRight, Mail, Lock, User, MapPin, Calendar, Loader2 } from "lucide-react";
+import { getApiBaseUrl } from "../lib/api";
+import { ChevronRight, Mail, Lock, User, MapPin, Calendar, Loader2, ShieldAlert } from "lucide-react";
 import { useSignup } from "../hooks/useSignup";
 
 function AuthContent() {
@@ -13,11 +14,14 @@ function AuthContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialMode = searchParams.get("mode") === "signup" ? "signup" : "login";
-  
+
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { signup, loading: signupLoading, error: signupError } = useSignup();
+
+  // Account lock state
+  const [lockInfo, setLockInfo] = useState<{ locked: boolean; minutes_remaining?: number } | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -33,12 +37,50 @@ function AuthContent() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Check lock status when email changes (debounced)
+  useEffect(() => {
+    if (mode !== "login" || !formData.email || !formData.email.includes("@")) {
+      setLockInfo(null);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/auth/lock-status?email=${encodeURIComponent(formData.email)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setLockInfo(data);
+        }
+      } catch {
+        // Silent — lock check is best-effort
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [formData.email, mode]);
+
+  const reportLoginAttempt = async (email: string, success: boolean) => {
+    try {
+      await fetch(`${getApiBaseUrl()}/auth/login-attempt`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, success }),
+      });
+    } catch {
+      // Non-critical
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
+
     if (mode === "signup") {
       await signup(formData);
+      return;
+    }
+
+    // Check if locked
+    if (lockInfo?.locked) {
+      setError(`Account is temporarily locked. Try again in ${lockInfo.minutes_remaining || "a few"} minutes.`);
       return;
     }
 
@@ -52,8 +94,23 @@ function AuthContent() {
 
     try {
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      await reportLoginAttempt(formData.email, true);
       router.push("/dashboard");
     } catch (err: any) {
+      await reportLoginAttempt(formData.email, false);
+      // Re-check lock status after failed attempt
+      try {
+        const res = await fetch(`${getApiBaseUrl()}/auth/lock-status?email=${encodeURIComponent(formData.email)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setLockInfo(data);
+          if (data.locked) {
+            setError(`Account has been temporarily locked due to multiple failed attempts. Try again in ${data.minutes_remaining || "a few"} minutes.`);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {}
       setError("Invalid email or password.");
     } finally {
       setLoading(false);
@@ -66,8 +123,8 @@ function AuthContent() {
   return (
     <div className="min-h-screen pt-20 flex items-center justify-center bg-slate-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black overflow-hidden relative">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-cyan-500/10 blur-[120px] rounded-full pointer-events-none" />
-      
-      <motion.div 
+
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md relative z-10 p-6"
@@ -78,16 +135,30 @@ function AuthContent() {
               {mode === "login" ? "Welcome Back" : "Join the Elite"}
             </h1>
             <p className="text-slate-400 text-sm">
-              {mode === "login" 
-                ? "Access your institutional dashboard." 
+              {mode === "login"
+                ? "Access your institutional dashboard."
                 : "Begin your journey to professional trading."}
             </p>
           </div>
 
+          {/* Account Locked Banner */}
+          {lockInfo?.locked && mode === "login" && (
+            <div className="mb-6 flex items-start gap-3 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
+              <ShieldAlert size={18} className="text-red-400 shrink-0 mt-0.5" />
+              <div>
+                <div className="text-sm font-bold text-red-400">Account Temporarily Locked</div>
+                <p className="text-xs text-red-300/70 mt-1">
+                  Too many failed login attempts. Try again in {lockInfo.minutes_remaining || "a few"} minutes, or contact{" "}
+                  <a href="mailto:support@horizonsvc.com" className="text-cyan-400 hover:underline">support@horizonsvc.com</a>.
+                </p>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <AnimatePresence mode="popLayout">
               {mode === "signup" && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
@@ -196,7 +267,7 @@ function AuthContent() {
 
             <button
               type="submit"
-              disabled={displayLoading}
+              disabled={displayLoading || (lockInfo?.locked && mode === "login")}
               className="w-full btn-primary py-3 flex items-center justify-center gap-2 mt-6 group"
             >
               {displayLoading ? <Loader2 className="animate-spin" /> : (
@@ -211,10 +282,11 @@ function AuthContent() {
           <div className="mt-6 text-center">
             <p className="text-slate-500 text-sm">
               {mode === "login" ? "Don't have an account?" : "Already a member?"}{" "}
-              <button 
+              <button
                 onClick={() => {
                   setMode(mode === "login" ? "signup" : "login");
                   setError("");
+                  setLockInfo(null);
                 }}
                 className="text-cyan-400 font-bold hover:underline"
               >

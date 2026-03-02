@@ -11,13 +11,14 @@ function MiniChartComponent({ symbol, colorTheme = "dark" }: MiniChartProps) {
 
   useEffect(() => {
     if (!container.current) return;
-    container.current.innerHTML = "";
+    const el = container.current;
+    el.innerHTML = "";
 
     const script = document.createElement("script");
     script.src = "https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js";
     script.type = "text/javascript";
     script.async = true;
-    script.innerHTML = JSON.stringify({
+    script.textContent = JSON.stringify({
       "symbol": symbol,
       "width": "100%",
       "height": "100%",
@@ -29,7 +30,8 @@ function MiniChartComponent({ symbol, colorTheme = "dark" }: MiniChartProps) {
       "largeChartUrl": ""
     });
 
-    container.current.appendChild(script);
+    el.appendChild(script);
+    return () => { el.innerHTML = ""; };
   }, [symbol, colorTheme]);
 
   return (

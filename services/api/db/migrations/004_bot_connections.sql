@@ -10,3 +10,5 @@ CREATE TABLE IF NOT EXISTS bot_connections (
   updated_at TIMESTAMPTZ DEFAULT now(),
   UNIQUE(uid)
 );
+
+CREATE INDEX IF NOT EXISTS idx_bot_connections_status ON bot_connections(status);

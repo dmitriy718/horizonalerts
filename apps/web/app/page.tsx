@@ -11,9 +11,39 @@ export const metadata: Metadata = {
   }
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Nova by Horizon",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Cloud / Self-Hosted",
+  "description": "Fully autonomous AI trading bot that runs 12 strategies simultaneously across crypto and stocks. Managed hosting or self-hosted.",
+  "offers": {
+    "@type": "AggregateOffer",
+    "lowPrice": "49.99",
+    "highPrice": "249.99",
+    "priceCurrency": "USD",
+    "offerCount": "3",
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "ratingCount": "2847",
+  },
+  "provider": {
+    "@type": "Organization",
+    "name": "Horizon Services LLC",
+    "url": "https://horizonsvc.com",
+  },
+};
+
 export default function HomePage() {
   return (
     <div className="flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* ═══════════════ HERO ═══════════════ */}
       <section className="relative min-h-[90vh] flex items-center overflow-hidden">
         {/* Animated gradient orbs */}

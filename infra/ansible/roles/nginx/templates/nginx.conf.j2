@@ -15,7 +15,7 @@ server {
   add_header X-Content-Type-Options "nosniff" always;
   add_header X-Frame-Options "DENY" always;
   add_header Referrer-Policy "no-referrer-when-downgrade" always;
-  add_header Content-Security-Policy "default-src 'self' https: data:; frame-ancestors 'none';" always;
+  add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://s3.tradingview.com https://*.firebaseio.com https://*.googleapis.com https://apis.google.com https://app.posthog.com https://us.i.posthog.com; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://app.posthog.com https://us.i.posthog.com; font-src 'self' https:; frame-ancestors 'none';" always;
 
   location / {
     proxy_pass http://127.0.0.1:3000;

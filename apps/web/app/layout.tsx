@@ -4,11 +4,40 @@ import { DisclaimerBar } from "./ui/DisclaimerBar";
 import { Analytics } from "./ui/Analytics";
 import { Navbar } from "./components/Navbar";
 import { CookieBanner } from "./components/CookieBanner";
+import { NewsletterPopup } from "./components/NewsletterPopup";
+import { FooterNewsletter } from "./components/FooterNewsletter";
 import { AuthProvider } from "./context/auth-context";
 
-export const metadata = {
-  title: "Nova by Horizon | Autonomous AI Trading Bots",
-  description: "Fully autonomous crypto and stock trading bots powered by AI confluence engines. Managed hosting or self-hosted."
+import type { Metadata } from "next";
+
+const siteUrl = process.env.PUBLIC_SITE_URL || "https://horizonsvc.com";
+
+export const metadata: Metadata = {
+  title: {
+    default: "Nova by Horizon | Autonomous AI Trading Bots",
+    template: "%s | Nova by Horizon",
+  },
+  description: "Fully autonomous crypto and stock trading bots powered by AI confluence engines. 12 strategies, real-time risk management. Managed hosting or self-hosted.",
+  keywords: ["AI trading bot", "crypto trading bot", "stock trading bot", "algorithmic trading", "automated trading", "trading signals", "trading alerts", "Kraken bot", "Coinbase bot", "options alerts"],
+  metadataBase: new URL(siteUrl),
+  openGraph: {
+    type: "website",
+    siteName: "Nova by Horizon",
+    title: "Nova by Horizon | Autonomous AI Trading Bots",
+    description: "Fully autonomous crypto and stock trading bots powered by AI confluence engines. Managed hosting or self-hosted.",
+    url: siteUrl,
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Nova by Horizon — Autonomous AI Trading Bots" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Nova by Horizon | Autonomous AI Trading Bots",
+    description: "Fully autonomous crypto and stock trading bots powered by AI confluence engines. Managed hosting or self-hosted.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
@@ -22,6 +51,7 @@ export default function RootLayout({
         <AuthProvider>
           <Analytics />
           <CookieBanner />
+          <NewsletterPopup />
           <Navbar />
           <main className="mx-auto min-h-screen pt-20">{children}</main>
           <footer className="relative border-t border-white/5 bg-slate-950 py-16 text-sm text-slate-400 overflow-hidden">
@@ -76,6 +106,7 @@ export default function RootLayout({
                 </ul>
               </div>
             </div>
+            <FooterNewsletter />
             <div className="mt-14 border-t border-white/5 pt-8 text-center text-xs text-slate-600">
               <DisclaimerBar />
               <p className="mt-4">&copy; {new Date().getFullYear()} Horizon Services LLC. All rights reserved. <span className="text-slate-700">|</span> Built with precision.</p>

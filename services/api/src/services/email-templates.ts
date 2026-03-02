@@ -1,143 +1,85 @@
-function escapeHtml(unsafe: string): string {
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
+/**
+ * @deprecated — Use the new template system at ./email-templates/index.ts instead.
+ * These legacy exports are kept for backwards compatibility but delegate to the new base-layout system.
+ */
 
-export const styles = `
-  body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }
-  .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-  .header { background: linear-gradient(135deg, #06b6d4 0%, #4f46e5 100%); padding: 30px; text-align: center; }
-  .header h1 { color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 1px; }
-  .content { padding: 40px 30px; }
-  .btn { display: inline-block; background: #4f46e5; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; margin-top: 20px; }
-  .footer { background: #f9fafb; padding: 20px; text-align: center; font-size: 12px; color: #9ca3af; }
-  .highlight { color: #4f46e5; font-weight: bold; }
-`;
+import { verifyEmail, welcomeEmail } from "./email-templates/index.js";
+import { baseLayout, escapeHtml } from "./email-templates/base-layout.js";
 
-export const verifyEmailTemplate = (url: string) => {
-  const safeUrl = escapeHtml(url);
-  return `
-<!DOCTYPE html>
-<html>
-<head><style>${styles}</style></head>
-<body>
-  <div class="container">
-    <div class="header"><h1>Welcome to Horizon</h1></div>
-    <div class="content">
-      <h2>Verify your email address</h2>
-      <p>Thanks for joining <strong>Horizon Alerts</strong>. To access the institutional dashboard and start receiving real-time order flow signals, please verify your email.</p>
-      <center><a href="${safeUrl}" class="btn">Verify Email Access</a></center>
-      <p style="margin-top: 30px; font-size: 13px; color: #666;">If you didn't create an account, you can safely ignore this email.</p>
-    </div>
-    <div class="footer">&copy; ${new Date().getFullYear()} Horizon Services. Institutional Order Flow.</div>
-  </div>
-</body>
-</html>
-`;
-};
+export { escapeHtml };
 
-export const welcomeTemplate = (name: string) => {
-  const base = process.env.PUBLIC_SITE_URL || "https://horizonsvc.com";
-  const safeName = escapeHtml(name);
-  return `
-<!DOCTYPE html>
-<html>
-<head><style>${styles}</style></head>
-<body>
-  <div class="container">
-    <div class="header"><h1>Access Granted</h1></div>
-    <div class="content">
-      <h2>Welcome aboard, ${safeName}.</h2>
-      <p>Your email is verified, and your dashboard is unlocked. You now have access to:</p>
-      <ul>
-        <li>Real-time Institutional Signals</li>
-        <li>The Academy Learning Modules</li>
-        <li>Pro Screener Tools</li>
-      </ul>
-      <p>We are thrilled to have you with us on this journey to decode the market.</p>
-      <center><a href="${base}/dashboard" class="btn">Launch Terminal</a></center>
-    </div>
-    <div class="footer">&copy; ${new Date().getFullYear()} Horizon Services.</div>
-  </div>
-</body>
-</html>
-`;
-};
+export const styles = ""; // No longer used; kept for import compat
+
+export const verifyEmailTemplate = (url: string) => verifyEmail(url);
+
+export const welcomeTemplate = (name: string) => welcomeEmail(name);
 
 export const contactConfirmationTemplate = (name: string, message: string) => {
   const safeName = escapeHtml(name);
   const safeMessage = escapeHtml(message);
-  return `
-<!DOCTYPE html>
-<html>
-<head><style>${styles}</style></head>
-<body>
-  <div class="container">
-    <div class="header"><h1>Message Received</h1></div>
-    <div class="content">
-      <h2>Hello ${safeName},</h2>
-      <p>Thank you for contacting Horizon Support. We have received your message and a member of our team will review it shortly.</p>
-      <div style="background: #f3f4f6; padding: 15px; border-left: 4px solid #4f46e5; margin: 20px 0;">
-        <strong>Your Message:</strong><br/>
-        <em style="color: #555;">"${safeMessage}"</em>
-      </div>
-      <p>Our typical response time is under 24 hours.</p>
-    </div>
-    <div class="footer">&copy; ${new Date().getFullYear()} Horizon Services.</div>
-  </div>
-</body>
-</html>
-`;
+  return baseLayout({
+    preheader: `We received your message, ${safeName}`,
+    title: "Message Received",
+    headerStyle: "brand",
+    body: `
+      <h2 style="margin:0 0 16px;font-size:18px;color:#111827;">Hello ${safeName},</h2>
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+        Thank you for contacting Horizon Support. We have received your message and a member of our team will review it shortly.
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 20px;">
+        <tr>
+          <td style="background:#f3f4f6;padding:15px;border-left:4px solid #4f46e5;border-radius:0 6px 6px 0;">
+            <strong style="font-size:13px;color:#374151;">Your Message:</strong><br/>
+            <em style="font-size:13px;color:#555;">"${safeMessage}"</em>
+          </td>
+        </tr>
+      </table>
+      <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.5;">Our typical response time is under 24 hours.</p>
+    `,
+  });
 };
 
 export const ticketTemplate = (ticketId: string, topic: string, message: string) => {
   const safeTopic = escapeHtml(topic);
   const safeMessage = escapeHtml(message);
   const safeTicketId = escapeHtml(ticketId);
-  return `
-<!DOCTYPE html>
-<html>
-<head><style>${styles}</style></head>
-<body>
-  <div class="container">
-    <div class="header"><h1>Support Ticket #${safeTicketId}</h1></div>
-    <div class="content">
-      <h2>Topic: ${safeTopic}</h2>
-      <p>We have logged your support request. Our engineering team has been notified.</p>
-      <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-      <p>${safeMessage}</p>
-      <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-      <p>You can reply directly to this email to add more information.</p>
-    </div>
-    <div class="footer">&copy; ${new Date().getFullYear()} Horizon Services.</div>
-  </div>
-</body>
-</html>
-`;
+  return baseLayout({
+    preheader: `Support Ticket #${safeTicketId} — ${safeTopic}`,
+    title: `Support Ticket #${safeTicketId}`,
+    subtitle: safeTopic,
+    headerStyle: "brand",
+    body: `
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+        We have logged your support request. Our engineering team has been notified.
+      </p>
+      <hr style="border:0;border-top:1px solid #eee;margin:20px 0;" />
+      <p style="margin:0 0 20px;font-size:14px;color:#374151;line-height:1.6;">${safeMessage}</p>
+      <hr style="border:0;border-top:1px solid #eee;margin:20px 0;" />
+      <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.5;">You can reply directly to this email to add more information.</p>
+    `,
+  });
 };
 
 export const securityAlertTemplate = (action: string) => {
   const safeAction = escapeHtml(action);
-  return `
-<!DOCTYPE html>
-<html>
-<head><style>${styles}</style></head>
-<body>
-  <div class="container">
-    <div class="header" style="background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);"><h1>Security Alert</h1></div>
-    <div class="content">
-      <h2>Account Update: ${safeAction}</h2>
-      <p>We noticed a change to your account settings (${safeAction}).</p>
-      <p>If this was you, no further action is needed.</p>
-      <p class="highlight">If you did not make this change, please contact support immediately.</p>
-    </div>
-    <div class="footer">&copy; ${new Date().getFullYear()} Horizon Services.</div>
-  </div>
-</body>
-</html>
-`;
+  return baseLayout({
+    preheader: `Security Alert: ${safeAction}`,
+    title: "Security Alert",
+    subtitle: safeAction,
+    headerStyle: "security",
+    body: `
+      <h2 style="margin:0 0 16px;font-size:18px;color:#111827;">Account Update: ${safeAction}</h2>
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+        We noticed a change to your account settings (${safeAction}).
+      </p>
+      <p style="margin:0 0 16px;font-size:15px;color:#374151;line-height:1.6;">
+        If this was you, no further action is needed.
+      </p>
+      <p style="margin:0;font-size:15px;color:#4f46e5;font-weight:700;line-height:1.6;">
+        If you did not make this change, please contact support immediately at
+        <a href="mailto:support@horizonsvc.com" style="color:#4f46e5;">support@horizonsvc.com</a> or
+        <a href="tel:+18643053993" style="color:#4f46e5;">+1 864-305-3993</a>.
+      </p>
+    `,
+  });
 };

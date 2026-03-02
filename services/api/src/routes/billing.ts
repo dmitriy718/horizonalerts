@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import Stripe from "stripe";
+import { query } from "../db.js";
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY || "";
 const stripe = new Stripe(stripeSecret, { apiVersion: "2024-04-10" });
@@ -22,14 +23,28 @@ export async function billingRoutes(server: FastifyInstance) {
         return reply.code(500).send({ error: "stripe_not_configured" });
       }
 
-      const { uid, email } = request.user;
+      const { uid, email, email_verified } = request.user;
+      if (!email_verified) {
+        return reply.code(403).send({ error: "email_not_verified" });
+      }
+
+      // Prevent duplicate subscriptions
+      const existing = await query<{ status: string }>(
+        `SELECT status FROM stripe_entitlements WHERE uid = $1 AND status = 'active' LIMIT 1`,
+        [uid]
+      );
+      if (existing.length) {
+        return reply.code(409).send({ error: "already_subscribed", message: "You already have an active Pro subscription." });
+      }
+
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
         line_items: [{ price: priceId, quantity: 1 }],
         customer_email: email,
         success_url: successUrl,
         cancel_url: cancelUrl,
-        metadata: { uid }
+        metadata: { uid },
+        subscription_data: { metadata: { uid } },
       });
 
       return { url: session.url };
@@ -44,7 +59,10 @@ export async function billingRoutes(server: FastifyInstance) {
         return reply.code(500).send({ error: "stripe_not_configured" });
       }
 
-      const { uid, email } = request.user;
+      const { uid, email, email_verified } = request.user;
+      if (!email_verified) {
+        return reply.code(403).send({ error: "email_not_verified" });
+      }
       const customers = await stripe.customers.list({ email, limit: 1 });
       let customerId = customers.data[0]?.id;
 

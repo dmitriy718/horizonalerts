@@ -1,7 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
+
+export const metadata: Metadata = {
+  title: "Blog",
+  description: "Market insights, trading strategies, and product updates from the Nova by Horizon team. Technical analysis and algorithmic trading education.",
+  openGraph: {
+    title: "Blog | Nova by Horizon",
+    description: "Market insights, trading strategies, and product updates from the Nova team.",
+  },
+};
 
 // Helper to get posts
 function getPosts() {

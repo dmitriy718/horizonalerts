@@ -17,6 +17,8 @@ function isPrivateIp(ip: string): boolean {
 async function isAllowedBotUrl(rawUrl: string): Promise<boolean> {
   try {
     const u = new URL(rawUrl);
+    // Only allow http/https — block file://, ftp://, data:, javascript:, etc.
+    if (u.protocol !== "http:" && u.protocol !== "https:") return false;
     const hostname = u.hostname;
     // Quick string check
     if (isPrivateIp(hostname)) return false;
@@ -88,7 +90,7 @@ export async function botRoutes(server: FastifyInstance) {
     { route: "/performance", botPath: "/api/v1/performance" },
     { route: "/positions", botPath: "/api/v1/positions" },
     { route: "/trades", botPath: "/api/v1/trades", allowedQs: ["limit", "offset"] },
-    { route: "/strategies", botPath: "/api/v1/strategy-performance" },
+    { route: "/strategies", botPath: "/api/v1/strategies" },
     { route: "/risk", botPath: "/api/v1/risk" },
     { route: "/thoughts", botPath: "/api/v1/thoughts", allowedQs: ["limit"] },
   ];
@@ -128,6 +130,53 @@ export async function botRoutes(server: FastifyInstance) {
       }
     );
   }
+
+  // --- CSV export (dedicated handler — cannot use JSON proxy) ---
+
+  server.get(
+    "/trades/csv",
+    { preHandler: server.requireAuth },
+    async (request, reply) => {
+      const { uid } = request.user;
+      const conn = await getBotConnection(uid);
+      if (!conn) {
+        return reply.code(404).send({ error: "no_bot_connected" });
+      }
+
+      try {
+        let qs = "";
+        if (typeof request.query === "object") {
+          const raw = request.query as Record<string, string>;
+          const safe = Object.fromEntries(
+            Object.entries(raw).filter(([k]) => ["limit"].includes(k))
+          );
+          qs = new URLSearchParams(safe).toString();
+        }
+        const url = qs
+          ? `${conn.bot_url}/api/v1/export/trades.csv?${qs}`
+          : `${conn.bot_url}/api/v1/export/trades.csv`;
+
+        const res = await fetch(url, {
+          headers: { "X-API-Key": conn.api_key, Accept: "text/csv" },
+          signal: AbortSignal.timeout(10_000),
+          redirect: "error",
+        });
+
+        if (!res.ok) {
+          return reply.code(res.status).send({ error: "csv_export_failed" });
+        }
+
+        const csv = await res.text();
+        return reply
+          .header("Content-Type", "text/csv")
+          .header("Content-Disposition", "attachment; filename=trades.csv")
+          .send(csv);
+      } catch (err) {
+        request.log.error({ err }, "CSV export proxy error");
+        return reply.code(502).send({ error: "bot_unreachable" });
+      }
+    }
+  );
 
   // --- Connection management ---
 
