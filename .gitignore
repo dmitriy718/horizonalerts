@@ -28,3 +28,18 @@ firebasestuff.txt
 horizonsvcfirebase.json
 horizontalv2.json
 postdoctorkey.json
+
+# Secret & local state hygiene
+.env.local
+.env.production
+.dev.vars
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+.claude/
+.local/
+*.save
+*.bak
+temp_pass.txt
